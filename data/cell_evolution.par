@@ -86,7 +86,7 @@ key_lock_length = 24
 ## of Cell Behaviour ##
 #######################
 
-genomefile = noscat80.4/nets/
+#genomefile = 
 nr_regnodes = 3
 divtime = 20	# scaled nr of steps before a cell initiates division
 divdur = 1000     # duration of division, during which a cell stops moving
@@ -143,9 +143,9 @@ motiledeath = 0.5
 dividingdeath = 0.5
 
 #scaling of death rates at end of season: for gradientbased cell death
-mindeathprob = 0.1
-maxdeathprob = 0.95
-fitscale = 30
+mindeathprob = 0.05
+maxdeathprob = 1.0
+fitscale = 60
 
 # PDE parameters (irrelevant for this simulation)
 n_chem = 0

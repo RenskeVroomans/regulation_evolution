@@ -116,7 +116,7 @@ public:
   void CellGrowthAndDivision2(void);
   void UpdateCellParameters(int Time);
   void UpdateCellParameters2(void);
-  double NeighInputCalc(Cell &c);
+  double NeighInputCalc(Cell &c, int outgene);
   int CheckWhoMadeitLinear(void);
   int CheckWhoMadeitRadial(void);
   void ScatterEndOfSeason(void);
