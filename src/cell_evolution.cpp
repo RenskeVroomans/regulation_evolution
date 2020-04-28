@@ -131,6 +131,7 @@ INIT {
       InitCellMigration();
       UpdateCellParameters(0);//update cell status //UpdateCellParameters2();
       par.starttime=0;
+      cerr<<"Done"<<endl;
     }
     else {
       cout<<"backup file is "<<par.backupfile<<endl;

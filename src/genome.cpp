@@ -185,7 +185,7 @@ void Genome::WriteToFile(char *filename)
   ofs.close();
 }
 
-void Genome::UpdateGeneExpression(const array<double,2> &input, bool sync_cells)
+void Genome::UpdateGeneExpression(const array<double,3> &input, bool sync_cells)
 {
   int i,j;
   double newval;
@@ -195,7 +195,7 @@ void Genome::UpdateGeneExpression(const array<double,2> &input, bool sync_cells)
   for (i=0; i<input.size(); i++){
     v_input.push_back(inputscale[i]*(double)input[i]);
   }
-  //cerr <<"updating..."<<endl;
+
   //update the regulatory genes
   for (i=0; i<regnodes.size(); i++){
     newval=0.;

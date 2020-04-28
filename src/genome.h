@@ -43,7 +43,7 @@ class Genome
 
   void GetOutput(array<int,2> &out);
   //genomic functions
-  void UpdateGeneExpression(const array<double,2> &input, bool sync_cells);
+  void UpdateGeneExpression(const array<double,3> &input, bool sync_cells);
   void FinishUpdate(void);
 
   void MutateGenome(double mu, double mustd);

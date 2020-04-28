@@ -615,7 +615,7 @@ al. 2000). The current version of TST does not include such functionality.
   inline void CreateRandomGenome(int in, int reg, int out){
     genome.InitGenome(in, reg, out);
   }
-  inline void UpdateGenes(const array<double,2> &input, bool sync){
+  inline void UpdateGenes(const array<double,3> &input, bool sync){
     genome.UpdateGeneExpression(input, sync);
   }
   inline void FinishGeneUpdate(void){

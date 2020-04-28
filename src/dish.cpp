@@ -65,7 +65,7 @@ Dish::Dish(void) {
 
 
   //cout<<cell[1].neighbours[0].first<<endl;
-  //cout<<cell[1].TargetArea()<<endl;
+  cout<<"initialised dish. "<<cell[1].TargetArea()<<endl;
 }
 
 
@@ -1247,7 +1247,7 @@ void Dish::CellGrowthAndDivision2(void)
 void Dish::UpdateCellParameters(int Time)
 {
   vector<Cell>::iterator c; //iterator to go over all Cells
-  array <double,2> inputs={0., 0.}; //was inputs(2,0.);
+  array <double,3> inputs={0., 0.,0.}; //was inputs(2,0.);
   array <int,2> output={0,0};
   vector<bool> which_cells(cell.size(), false);
   vector<int> sigma_newcells;
@@ -1261,10 +1261,11 @@ void Dish::UpdateCellParameters(int Time)
   static const int DIV_OUT=0;
   //cout<<"Update Cell parameters "<<Time<<endl;
   //update networks asynchronously f
-  for( auto & c: cell){
-    if( c.AliveP() ){
+  for( auto &c: cell){
+    if(c.Sigma() && c.AliveP() ){
       c.time_since_birth++;
       interval=Time+c.Gextiming();
+
       //update the network withing each cell, if it is the right time
       if(!(interval%par.scaling_cell_to_ca_time)){
         //calculate inputs
@@ -1277,7 +1278,7 @@ void Dish::UpdateCellParameters(int Time)
   }
 
   for( auto & c: cell){
-    if( c.AliveP() ){
+    if(c.Sigma() && c.AliveP() ){
       interval=Time+c.Gextiming();
       if(!(interval%par.scaling_cell_to_ca_time)){
         c.FinishGeneUpdate();
@@ -1354,9 +1355,11 @@ double Dish::NeighInputCalc(Cell &c, int outgene)
     totalsig+=nei.second.first*(double)cellout[outgene]; //how much membrane contact * signal
     totalmem+=nei.second.first;
   }
-
-  return totalsig/(double)totalmem;
-
+  if(totalmem){
+    return totalsig/(double)totalmem;
+  }else{
+    return 0;
+  }
 }
 
 //Function that checks and changes cell parameters
@@ -1366,7 +1369,7 @@ void Dish::UpdateCellParameters2(void)
    //cell order too
 
    vector<Cell>::iterator c; //iterator to go over all Cells
-   array <double, 2> inputs={0.,0.}; //was inputs(2,0.);
+   array <double, 3> inputs={0.,0.,0.}; //was inputs(2,0.);
    array <int,2> output={0,0};
    vector<bool> which_cells(cell.size());
    vector<int> sigma_newcells;
@@ -1385,7 +1388,7 @@ void Dish::UpdateCellParameters2(void)
          //calculate inputs
          inputs[0]=(double)c.grad_conc;
          inputs[1]=NeighInputCalc(c, CCS_OUT);
-
+         inputs[2]=0.;
          c.UpdateGenes(inputs, true); //second argument is whether cells update synchronously. For now YES
 
        }
@@ -1875,7 +1878,7 @@ void Dish::GradientBasedCellKill2(int popsize)
   totalfit=0.;
   int removei,removesig;
 
-
+  sig_dist.push_back(make_pair(0,0.0));
   //determine final distance of those cells that are alive
   for(auto c: cell){
     if(c.Sigma()>0 && c.AliveP()){
@@ -1883,12 +1886,13 @@ void Dish::GradientBasedCellKill2(int popsize)
       distance=sqrt((Food->GetPeakx()-c.getXpos())*(Food->GetPeakx()-c.getXpos())+(Food->GetPeaky()-c.getYpos())*(Food->GetPeaky()-c.getYpos()));
       deathprob=par.mindeathprob+(par.maxdeathprob-par.mindeathprob)*pow(distance,3.)/(pow(par.fitscale,3.)+pow(distance,3.));
       totalfit+=deathprob; //for relative version
-      cerr<<"distance is "<<distance<<", deathprob is "<<deathprob<<endl;
+      //cerr<<"distance is "<<distance<<", deathprob is "<<deathprob<<endl;
       sig_dist.push_back(make_pair(c.Sigma(),totalfit));
     }
   }
 
   int i;
+
   while(current_popsize>popsize){
 
      rn = totalfit*RANDOM();
@@ -1903,7 +1907,8 @@ void Dish::GradientBasedCellKill2(int popsize)
        sig_dist[i].second-=thisfit;
        i++;
      }
-     sig_dist.erase(sig_dist.begin()+(i-1));
+     totalfit-=thisfit;
+     sig_dist.erase(sig_dist.begin()+(removei));
      cell[removesig].SetTargetArea(0);
      cell[removesig].Apoptose(); //set alive to false
      CPM->RemoveCell(&cell[removesig] ,par.min_area_for_life,cell[removesig].meanx,cell[removesig].meany);
@@ -1911,10 +1916,12 @@ void Dish::GradientBasedCellKill2(int popsize)
    }
 
    //for remaining cells, reset the times they divided and clear the genome states
+   int countcells=0;
    for(auto &c : cell){
      if (c.AliveP() && c.Sigma()){
        c.ResetTimesDivided();
        c.ClearGenomeState();
+       countcells+=1;
      }
    }
 
