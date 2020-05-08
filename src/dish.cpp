@@ -1275,11 +1275,12 @@ void Dish::UpdateCellParameters(int Time)
           //cout<<"cell "<<c->Sigma()<<" wants to divide"<<endl;
           c->dividecounter++;
 
-          if(c->dividecounter>=par.divtime+par.divdur && c->TimesDivided()<par.maxdivisions){ //cannot divide more than three times
+          if(c->dividecounter>=par.divtime+par.divdur && c->DivisionResources()){ //cannot divide more than three times
             //divide
             if(c->Area()>30){
               //cout<<"cell "<<c->Sigma()<<" will divide"<<endl;
               which_cells[c->sigma]=TRUE;
+              c->asymmdiv=output[1];  //store whether the coming division is in fact aymmetric
               divvs=1;
             }
             //we already set the target area back to normal. We won't run any AmoebaeMove in between this and division
@@ -1292,7 +1293,7 @@ void Dish::UpdateCellParameters(int Time)
           //not time to divide yet, but do stop migrating and start growing
           else if (c->dividecounter>par.divtime ){
             //cout<<"cell "<<c->Sigma()<<" starting to divide"<<endl;
-            if ( c->TimesDivided()<par.maxdivisions && c->TargetArea()<par.target_area*2) c->SetTargetArea(c->TargetArea()+1);
+            if ( c->DivisionResources() && c->TargetArea()<par.target_area*2) c->SetTargetArea(c->TargetArea()+1);
             c->setMu(0.);
             c->setChemMu(0.0);
             c->setTau(2); //basically only for color right now...

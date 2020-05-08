@@ -91,6 +91,9 @@ public:
     genome=src.genome;
     gextiming=src.gextiming;
 
+    divresources=src.divresources;
+    asymmdiv=src.asymmdiv;
+
     tau=src.tau;
     alive=src.alive;
     v[0]=src.v[0];
@@ -165,6 +168,8 @@ public:
     genome=src.genome;
     gextiming=src.gextiming;
     dividecounter=src.dividecounter;
+    divresources=src.divresources;
+    asymmdiv=src.asymmdiv;
 
     v[0]=src.v[0];
     v[1]=src.v[1];
@@ -628,6 +633,28 @@ al. 2000). The current version of TST does not include such functionality.
     genome.MutateGenome(mu, mustd);
   }
 
+  //return current amount of resources
+  inline int DivisionResources(){
+    return divresources;
+  }
+
+  //mother cell has to divide the resources between herself and the daughter
+  inline int DivideResources(){
+    divresources-=1;
+
+    if(asymmdiv){
+       asymmdiv=0; //reset: next division could be symmetric again
+       return 0; //asymmetric division, give no resources to daughter
+    }else{
+      int nudivresources=divresources/2;
+      if (nudivresources*2<divresources){
+       divresources=nudivresources+1;
+      }
+      return nudivresources;
+    }
+
+  }
+
   inline void setGTiming(int timing){
     gextiming=timing;
   }
@@ -1083,6 +1110,8 @@ protected:
   //mostly controlling when to divide right now
   Genome genome;
   int dividecounter; //how long have you had output saying to divide?
+  int divresources; //amount of resource left
+  int asymmdiv;
   int grad_conc; //how much gradient do I perceive?
   int gextiming; //funny variable deciding when to update gex
 

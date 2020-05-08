@@ -100,6 +100,7 @@ INIT {
         if(c.Sigma()){
           c.setGTiming((int)(RANDOM()*par.scaling_cell_to_ca_time));
           c.dividecounter=0;
+          c.divresources=par.maxdivisions; //this should be 1, 3, 7, 15, 31 (Sn+1=Sn*2+1)
           c.SetTargetArea(par.target_area); //sets target area because in dividecells the new target area = area
           //initialise a cell's timing for gex Updating
           //c.setGTiming((int)(RANDOM()*par.scaling_cell_to_ca_time));

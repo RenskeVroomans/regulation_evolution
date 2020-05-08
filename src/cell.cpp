@@ -81,6 +81,9 @@ void Cell::CellBirth(Cell &mother_cell) {
   mother_cell.AddTimesDivided();
   times_divided=mother_cell.times_divided;
 
+  divresources=mother_cell.DivideResources();
+  asymmdiv=0; //reset whether division is asymmetric
+
   owner=mother_cell.owner;
 
   date_of_birth=owner->Time();
