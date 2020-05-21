@@ -156,6 +156,7 @@ INIT {
       InitContactLength();
       InitVectorJ();
       Food->InitIncreaseVal(CPM);
+      cout<<"done with init"<<endl;
 
     }
   } catch(const char* error) {
@@ -174,10 +175,11 @@ TIMESTEP {
     static int sum=0, nr=0;
 
 
-    if( !(i%100000) ) cerr<<"TIME: "<<i<<endl;
+    if( !(i%500) ) cerr<<"TIME: "<<i<<endl;
 
     //auto start = high_resolution_clock::now();
     dish->CellsEat2();
+    cerr<<"done with eating"<<endl;
     //auto stop = high_resolution_clock::now();
     //auto duration = duration_cast<microseconds>(stop - start);
     //sum+=duration.count();
@@ -185,6 +187,7 @@ TIMESTEP {
     //cout << duration.count() << endl;
     //This function updates the network and deals with the consequences of the output (motility vs division)
     dish->UpdateCellParameters(i); // for continuous GRN updating and reproduction
+
 
     dish->CellMigration();//updates persistence time and targetvectors
 

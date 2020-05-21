@@ -86,7 +86,7 @@ key_lock_length = 24
 ## of Cell Behaviour ##
 #######################
 
-#genomefile = noscat80.4/nets/
+#genomefile = designnetasym.txt
 nr_regnodes = 3
 divtime = 20	# scaled nr of steps before a cell initiates division
 divdur = 1000     # duration of division, during which a cell stops moving
@@ -128,8 +128,8 @@ zero_persistence_past_theline = 0
 #these days k+l=50 -> 50*0.01=0.5 (one mutation every two replications)
 #mut_rate = 0.01
 mut_rate = 0.0
-evolsim = 1
-evolreg = 1
+evolsim = 0
+evolreg = 0
 
 #genome mutation
 mu = 0.02
@@ -192,12 +192,12 @@ metabolic_conversion = 0.5
 ## output ##
 ############
 
-storage_stride = 1000
+storage_stride = 500
 graphics = false
 store = true
 divisioncolour = true
 datadir = data_film2
-save_text_file_period = 1000
+save_text_file_period = 500
 datafile = data_cellcount.txt
 save_backup_period = 100000
 backupdir = backup

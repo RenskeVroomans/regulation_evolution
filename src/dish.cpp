@@ -821,14 +821,17 @@ void Dish::CellsEat2(void)
   int MAX_PARTICLES=1000000; //max particles that a cell can have inside it
   std::vector<int> fsumx(cell.size(),0), fsumy(cell.size(),0),ftotal(cell.size(),0);
   int foodload;
+  cerr<<"starting the eating"<<endl;
 
   // static int sum1=0, nr1=0;
   // auto start1 = high_resolution_clock::now();
-
+  cerr << par.sizex<<" "<<par.sizey<<endl;
   for(int x=1; x<par.sizex-1;x++){
+    cerr<<"new row "<<x<<endl;
       for(int y=1; y<par.sizey-1;y++){
         if(CPM->Sigma(x,y) && cell[CPM->Sigma(x,y)].AliveP() && cell[CPM->Sigma(x,y)].getTau() == PREY && Food->Sigma(x,y)){
           int cell_sigma=CPM->Sigma(x,y);
+          cerr<<"Sigma "<<cell_sigma<<" Food "<<Food->Sigma(x,y)<<endl;
           if(Food->Sigma(x,y) > 0){
             //determine the mean position of the food that the cell sees
             int fx=x, fy=y;
@@ -868,13 +871,14 @@ void Dish::CellsEat2(void)
     // if (!(nr1%1000)){
     //   cout <<" duration average 1: "<<sum1/nr1<<endl;
     // }
-
+    cerr<<"first half fine"<<endl;
     // static int sum=0, nr=0;
     // auto start = high_resolution_clock::now();
     //update the cell's movement vector with respect to the location of food
     int count=0;
     double xv,yv;
     for(auto &c: cell){
+      cerr<<"this cell "<<c.Sigma()<<endl;
       if(c.sigma && ftotal[c.sigma]){
         //calculate "food" vector with respect to cell mean pos
         xv=fsumx[c.sigma]/(double)ftotal[c.sigma]-c.meanx;
@@ -1320,7 +1324,7 @@ void Dish::UpdateCellParameters(int Time)
       }
     }
   }
-
+  cerr<<"so far so good"<<endl;
   //divide all cells that are bound to divide
   sigma_newcells=CPM->DivideCells(which_cells);
   MutateCells(sigma_newcells);
