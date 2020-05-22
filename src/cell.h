@@ -640,19 +640,38 @@ al. 2000). The current version of TST does not include such functionality.
 
   //mother cell has to divide the resources between herself and the daughter
   inline int DivideResources(){
-    divresources-=1;
+    if (divresources){
 
-    if(asymmdiv){
-       asymmdiv=0; //reset: next division could be symmetric again
-       return 0; //asymmetric division, give no resources to daughter
-    }else{
-      int nudivresources=divresources/2;
-      if (nudivresources*2<divresources){
-       divresources=nudivresources+1;
+      divresources-=1;
+      
+      if(asymmdiv){
+         asymmdiv=0; //reset: next division could be symmetric again
+         //cerr<<"divresources for mom "<<sigma<<": "<<divresources<<endl;
+         //cerr<<"divresources for daughter: "<<0<<endl;
+         return 0; //asymmetric division, give no resources to daughter
+      }else{
+        int nudivresources=divresources/2;
+        if (nudivresources*2<divresources){
+          divresources=nudivresources+1;
+        }else{
+          divresources=nudivresources;
+        }
+         //cerr<<"divresources for mom "<<sigma<<": "<<divresources<<endl;
+         //cerr<<"divresources for daughter: "<<nudivresources<<endl;
+
+        return nudivresources;
       }
-      return nudivresources;
+    }else{
+      return 0;
     }
+  }
 
+  inline void SetDivResources(int resources){
+    divresources=resources;
+  }
+
+  inline void ResetAsymmetry(){
+    asymmdiv=0;
   }
 
   inline void setGTiming(int timing){

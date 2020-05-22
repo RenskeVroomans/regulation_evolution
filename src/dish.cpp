@@ -529,10 +529,10 @@ void Dish::FoodPlot(Graphics *g)
           }
           // Make the pixel four times as large
           // to fit with the CPM plane
-          g->Point(16+food_to_index_convfact*Food->Sigma(x,y),2*x,2*y);
-          g->Point(16+food_to_index_convfact*Food->Sigma(x,y),2*x+1,2*y);
-          g->Point(16+food_to_index_convfact*Food->Sigma(x,y),2*x,2*y+1);
-          g->Point(16+food_to_index_convfact*Food->Sigma(x,y),2*x+1,2*y+1);
+          g->Point(18+food_to_index_convfact*Food->Sigma(x,y),2*x,2*y);
+          g->Point(18+food_to_index_convfact*Food->Sigma(x,y),2*x+1,2*y);
+          g->Point(18+food_to_index_convfact*Food->Sigma(x,y),2*x,2*y+1);
+          g->Point(18+food_to_index_convfact*Food->Sigma(x,y),2*x+1,2*y+1);
         }else{
           ;
           // it's getting a bit cumbersome to look at this, for now I'll do without
@@ -821,17 +821,15 @@ void Dish::CellsEat2(void)
   int MAX_PARTICLES=1000000; //max particles that a cell can have inside it
   std::vector<int> fsumx(cell.size(),0), fsumy(cell.size(),0),ftotal(cell.size(),0);
   int foodload;
-  cerr<<"starting the eating"<<endl;
 
   // static int sum1=0, nr1=0;
   // auto start1 = high_resolution_clock::now();
-  cerr << par.sizex<<" "<<par.sizey<<endl;
+
   for(int x=1; x<par.sizex-1;x++){
-    cerr<<"new row "<<x<<endl;
       for(int y=1; y<par.sizey-1;y++){
         if(CPM->Sigma(x,y) && cell[CPM->Sigma(x,y)].AliveP() && cell[CPM->Sigma(x,y)].getTau() == PREY && Food->Sigma(x,y)){
           int cell_sigma=CPM->Sigma(x,y);
-          cerr<<"Sigma "<<cell_sigma<<" Food "<<Food->Sigma(x,y)<<endl;
+
           if(Food->Sigma(x,y) > 0){
             //determine the mean position of the food that the cell sees
             int fx=x, fy=y;
@@ -871,14 +869,13 @@ void Dish::CellsEat2(void)
     // if (!(nr1%1000)){
     //   cout <<" duration average 1: "<<sum1/nr1<<endl;
     // }
-    cerr<<"first half fine"<<endl;
     // static int sum=0, nr=0;
     // auto start = high_resolution_clock::now();
     //update the cell's movement vector with respect to the location of food
     int count=0;
     double xv,yv;
     for(auto &c: cell){
-      cerr<<"this cell "<<c.Sigma()<<endl;
+      //cerr<<"this cell "<<c.Sigma()<<endl;
       if(c.sigma && ftotal[c.sigma]){
         //calculate "food" vector with respect to cell mean pos
         xv=fsumx[c.sigma]/(double)ftotal[c.sigma]-c.meanx;
@@ -1255,6 +1252,8 @@ void Dish::UpdateCellParameters(int Time)
   array <int,2> output={0,0};
   vector<bool> which_cells(cell.size(), false);
   vector<int> sigma_newcells;
+  vector<int> to_mutate;
+  vector<int> switched;
   int interval;
   int divvs=0;
 
@@ -1324,11 +1323,37 @@ void Dish::UpdateCellParameters(int Time)
       }
     }
   }
-  cerr<<"so far so good"<<endl;
+
+  
   //divide all cells that are bound to divide
   sigma_newcells=CPM->DivideCells(which_cells);
-  MutateCells(sigma_newcells);
+  
+  //make random choice which cell is the mother (keeps resource in case of asymmetric division) and which the daughter (mutates)
+  int dc;
+  
+  for(int count=0; count<sigma_newcells.size(); count++){
+    dc=sigma_newcells[count];
+    if(dc>0){
+      if(RANDOM()>0.5){ //"mother" mutates, daughter gets resources
+        to_mutate.push_back(count);
+        switched.push_back(count);
+        cell[count].SetDivResources(cell[dc].DivideResources());
+      }
+      else{
+        to_mutate.push_back(dc);
+        cell[dc].SetDivResources(cell[count].DivideResources());
+      }
+      cell[dc].ResetAsymmetry();
+      cell[count].ResetAsymmetry();
+    }
+  }
+
+  //MutateCells(sigma_newcells);
+  MutateCells(to_mutate);
+
   UpdateVectorJ(sigma_newcells);
+  UpdateVectorJ(switched);
+  
 
  //cout<<"Update Cell parameters end\n\n"<<endl;
 }
@@ -1827,6 +1852,7 @@ void Dish::GradientBasedCellKill(int popsize)
     }
     else{
       cell[n.first].ResetTimesDivided();
+      cell[n.first].SetDivResources(par.maxdivisions); 
       cell[n.first].ClearGenomeState();
     }
   }

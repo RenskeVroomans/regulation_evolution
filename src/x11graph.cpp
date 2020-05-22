@@ -209,21 +209,21 @@ void X11Graphics::GenerateColorTable(XColor *cols)
   //DOES THIS DO IT ??? YEP - more or less !!!
   //            whi,blk,red,blu,yllw,cyan, green,magnt,brwn,grey
     int i;
-    int ar[16], ag[16], ab[16];
+    int ar[18], ag[18], ab[18];
   if(!par.divisioncolour){
-    int ar1[16] = {254, 0, 200, 0,  254, 50,  90,   245,  100, 180, 200, 200, 200, 200, 200, 200};
-    int ag1[16] = {254, 0, 30,  51, 210, 206, 254,  10,   50,  180, 200, 200, 200, 200, 200, 200};
-    int ab1[16] = {254, 0, 30,  102,50,  250, 180,  200,  0,   180, 200, 200, 200, 200, 200, 200};
-    for(i=0; i<16; i++){
+    int ar1[18] = {254, 0, 200, 0,  254, 50,  90,   245,  100, 180, 200, 200, 200, 200, 200, 200, 200, 200};
+    int ag1[18] = {254, 0, 30,  51, 210, 206, 254,  10,   50,  180, 200, 200, 200, 200, 200, 200, 200, 200};
+    int ab1[18] = {254, 0, 30,  102,50,  250, 180,  200,  0,   180, 200, 200, 200, 200, 200, 200, 200, 200};
+    for(i=0; i<18; i++){
       ar[i]=ar1[i];
       ag[i]=ag1[i];
       ab[i]=ab1[i];
     }
   }else{
-    int ar2[16] = {254, 0, 120, 200, 250, 255, 255,   0,   0,   0,   0, 225, 0, 0, 0, 0};
-    int ag2[16] = {254, 0,   0,   0,  80, 180, 250,   0,  50, 200, 255, 255, 0, 0, 0, 0};
-    int ab2[16] = {254, 0,   0,   0,   0,   0,   0, 120, 255, 255, 255, 255, 0, 0, 0, 0};
-    for(i=0; i<16; i++){
+    int ar2[18] = {254, 0, 120, 200, 250, 255, 255, 190, 160, 120,   0,   0,   0,   0, 255, 255, 255, 210};
+    int ag2[18] = {254, 0,   0,   0,  80, 180, 250, 160, 100,  90,   0,  50, 200, 255, 225, 180, 100,   0};
+    int ab2[18] = {254, 0,   0,   0,   0,   0,   0,  50,  50,  50, 120, 255, 255, 255, 255, 255, 255, 250};
+    for(i=0; i<18; i++){
       ar[i]=ar2[i];
       ag[i]=ag2[i];
       ab[i]=ab2[i];
@@ -233,7 +233,7 @@ void X11Graphics::GenerateColorTable(XColor *cols)
   //color 0 is white (background), 1 is black, the other until 10 are simple colors
   // color blind friendly and pretty!
   // red, yellow, blue, cyan, green, magenta, brown <- :$
-  for(i=0;i<16;i++){
+  for(i=0;i<18;i++){
     cols[i].red = ar[i] ;
     cols[i].green=ag[i];
     cols[i].blue=ab[i];
@@ -246,7 +246,7 @@ void X11Graphics::GenerateColorTable(XColor *cols)
   // steps are 250/50 =5 long
   int r=254,g=254,b=100;
   int step = 5;
-  for(i=16;i<66;i++){
+  for(i=18;i<68;i++){
     //make colors
     // r-= 1;
 
@@ -264,7 +264,7 @@ void X11Graphics::GenerateColorTable(XColor *cols)
   //this is for the shading, when predators are below that
   // maybe can be combined with map above?
   r=154;g=154;b=102;
-  for(i=66;i<116;i++){
+  for(i=68;i<118;i++){
     //make colors
     g-=step/2;
     cols[i].red =  r ;

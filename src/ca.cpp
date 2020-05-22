@@ -1561,7 +1561,7 @@ int **CellularPotts::SearchNandPlot(Graphics *g, bool get_neighbours)
         if(!par.divisioncolour){
           colour = (*cell)[sigma[i][j]].Colour();
         }else{
-          colour = (*cell)[sigma[i][j]].getTau()+1+( (*cell)[sigma[i][j]].getTau()-1 ) *4+(*cell)[sigma[i][j]].TimesDivided();
+          colour = (*cell)[sigma[i][j]].getTau()+1+( (*cell)[sigma[i][j]].getTau()-1 ) *7+(*cell)[sigma[i][j]].TimesDivided();
         }
 
 
@@ -2770,6 +2770,7 @@ vector<int> CellularPotts::DivideCells(vector<bool> which_cells)
             }
           }
 
+          //mother always ends up at smaller ypos than daughter
           if( checkj>( (int)( celldir[motherp->sigma].aa2 + celldir[motherp->sigma].bb2*(double)checki) ) ){
             motherp->DecrementArea();
             motherp->RemoveSiteFromMoments(i,j);

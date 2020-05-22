@@ -1,11 +1,11 @@
 ### Max time (max # monte carlo steps) ###
 # takes about 1hour per 100000 timesteps
 #mcs = 200000000
-mcs = 100000000
+mcs = 150000  #100000000
 
 #cells in blobs move at 0.0055 px/mcs
 # duration of season could then be larger than field size/ speed
-season_duration = 200000
+season_duration = 150000
 
 ### grid size ###
 sizex = 500
@@ -86,10 +86,10 @@ key_lock_length = 24
 ## of Cell Behaviour ##
 #######################
 
-#genomefile = designnetasym.txt
+genomefile = designnetasym.txt
 nr_regnodes = 3
 divtime = 20	# scaled nr of steps before a cell initiates division
-divdur = 1000     # duration of division, during which a cell stops moving
+divdur =  200  #1000     # duration of division, during which a cell stops moving
 scaling_cell_to_ca_time = 20  # scaling factor for: freq update food plane, predation, feeding and growth/divide
 maxdivisions = 7  #1, 3, 7, 15, 31, etc
 

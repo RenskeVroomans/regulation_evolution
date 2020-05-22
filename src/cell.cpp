@@ -81,8 +81,9 @@ void Cell::CellBirth(Cell &mother_cell) {
   mother_cell.AddTimesDivided();
   times_divided=mother_cell.times_divided;
 
-  divresources=mother_cell.DivideResources();
-  asymmdiv=0; //reset whether division is asymmetric
+  //divresources=mother_cell.DivideResources(); //this should happen later! Randomise who is the true "mother", because mommy always ends up at lower ypos
+  divresources=mother_cell.divresources;
+  asymmdiv=mother_cell.asymmdiv; 
 
   owner=mother_cell.owner;
 
