@@ -1272,6 +1272,7 @@ void Dish::UpdateCellParameters(int Time)
         inputs[GRAD]=(double)c.grad_conc;
         inputs[DIV_IN]=(double)c.TimesDivided(); //NeighInputCalc(*c);
         inputs[CCS_IN]=NeighInputCalc(c, CCS_OUT);
+        //cerr<<"cell "<<c.Sigma()<<" ccs input "<<inputs[CCS_IN]<<endl;
         c.UpdateGenes(inputs, true);
       }
     }
@@ -1284,7 +1285,10 @@ void Dish::UpdateCellParameters(int Time)
         c.FinishGeneUpdate();
         //what is the state of the output node of the cell?
         c.GetGeneOutput(output);
-
+        //if(output[DIV_OUT]){
+        //  cerr<<"dividing cell, CCS out is "<<output[CCS_OUT]<<endl;
+        //}
+        //cerr<<"cell "<<c.Sigma()<<" status "<<output[DIV_OUT]<<" output "<<output[CCS_OUT]<<endl;
         //cell decides to divide
         if (output[DIV_OUT]==1){
           //cout<<"cell "<<c->Sigma()<<" wants to divide"<<endl;
@@ -1351,11 +1355,14 @@ double Dish::NeighInputCalc(Cell &c, int outgene)
   array <int,2> cellout={0,0};
 
   for (auto const& nei : c.neighbours){
-    cell[nei.first].GetGeneOutput(cellout); //what is this cell signalling?
-    totalsig+=nei.second.first*(double)cellout[outgene]; //how much membrane contact * signal
+    if (nei.first){
+      cell[nei.first].GetGeneOutput(cellout); //what is this cell signalling?
+      totalsig+=nei.second.first*(double)cellout[outgene]; //how much membrane contact * signal
+    }
     totalmem+=nei.second.first;
   }
   if(totalmem){
+    //cerr<<"input for cell "<<c.Sigma()<<" of type "<<c.getTau()<<": "<<totalsig/(double)totalmem<<endl;
     return totalsig/(double)totalmem;
   }else{
     return 0;
