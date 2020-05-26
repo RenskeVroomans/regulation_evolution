@@ -1267,7 +1267,7 @@ void Dish::UpdateCellParameters(int Time)
       if(!(interval%par.scaling_cell_to_ca_time)){
         //calculate inputs
         inputs[0]=(double)c->grad_conc;
-        inputs[1]=(double)c->TimesDivided(); //NeighInputCalc(*c);
+        inputs[1]=(double)c->DivisionResources(); //NeighInputCalc(*c);
         c->UpdateGenes(inputs, true);
         c->FinishGeneUpdate();
         //what is the state of the output node of the cell?
@@ -1324,13 +1324,13 @@ void Dish::UpdateCellParameters(int Time)
     }
   }
 
-  
+
   //divide all cells that are bound to divide
   sigma_newcells=CPM->DivideCells(which_cells);
-  
+
   //make random choice which cell is the mother (keeps resource in case of asymmetric division) and which the daughter (mutates)
   int dc;
-  
+
   for(int count=0; count<sigma_newcells.size(); count++){
     dc=sigma_newcells[count];
     if(dc>0){
@@ -1353,7 +1353,7 @@ void Dish::UpdateCellParameters(int Time)
 
   UpdateVectorJ(sigma_newcells);
   UpdateVectorJ(switched);
-  
+
 
  //cout<<"Update Cell parameters end\n\n"<<endl;
 }
@@ -1852,7 +1852,7 @@ void Dish::GradientBasedCellKill(int popsize)
     }
     else{
       cell[n.first].ResetTimesDivided();
-      cell[n.first].SetDivResources(par.maxdivisions); 
+      cell[n.first].SetDivResources(par.maxdivisions);
       cell[n.first].ClearGenomeState();
     }
   }
