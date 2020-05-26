@@ -3484,6 +3484,10 @@ void CellularPotts::RemoveCell(Cell* thiscell,int min_area, int meanx, int meany
 
 //   cerr<<"meanx: "<<meanx<<" meany: "<<meany<<endl;
 
+  if (!thiscell->Area()){
+    cerr<<"Warning: CPM->RemoveCell(): trying to remove a cell with no area."<<endl;
+    return;
+  }
   if(sigma[meanx][meany]==thissig){
     sigma[meanx][meany]=0;
     countpix++;
@@ -3523,6 +3527,7 @@ void CellularPotts::RemoveCell(Cell* thiscell,int min_area, int meanx, int meany
       (*cell)[signeigh].setNeighbour(thissig,0,0);
       (*cell)[signeigh].updateNeighbourBoundary(0,blength);
     }
+    thiscell->setNeighbour(signeigh,0,0);
   }
 
 
