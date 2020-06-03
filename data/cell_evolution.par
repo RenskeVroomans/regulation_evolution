@@ -1,11 +1,11 @@
 ### Max time (max # monte carlo steps) ###
 # takes about 1hour per 100000 timesteps
 #mcs = 200000000
-mcs = 150000 #100000000
+mcs = 600000 #100000000
 
 #cells in blobs move at 0.0055 px/mcs
 # duration of season could then be larger than field size/ speed
-season_duration = 150000
+season_duration = 300000
 
 ### grid size ###
 sizex = 500
@@ -52,11 +52,11 @@ init_chemmu = 0 #1.0 #chemotaxis strength
 ## Cell Parameters ##
 
 # set the target area to half_div_area
-target_area = 200 #50
+target_area = 50
 
 #Division area
 #half_div_area = 100
-half_div_area = 500
+half_div_area = 100
 #division area for predators, set to -1 if you don't want to use
 half_div_area_2 = -1
 
@@ -69,9 +69,9 @@ min_area_for_life = 4
 #keylock_list_filename = ../data/KL_l24_14_28.dat
 #keylock_list_filename = ../data/KL_l25_12_24.dat
 #keylock_list_filename = ../data/KL_l25_12_48.dat
-keylock_list_filename = ../data/newKL_12_12_g6.dat
+#keylock_list_filename = ../data/newKL_12_12_g6.dat
 #keylock_list_filename = ../data/newKL_14_28_g0.dat
-#keylock_list_filename = ../data/newKL_14_36_g-4.dat
+keylock_list_filename = ../data/newKL_14_36_g-4.dat
 
 #lookup table for J val with medium:
 # e.g if I get 10o4_3_2_1 -> J(tau,medium) = 10 + sum(4*key[0],3*key[1],2*key[2],1*key[3])
@@ -86,7 +86,7 @@ key_lock_length = 24
 ## of Cell Behaviour ##
 #######################
 
-genomefile = designnetccs.txt
+#genomefile = designnetccs.txt
 nr_regnodes = 3
 divtime = 20	# scaled nr of steps before a cell initiates division
 divdur =  200 #1000     # duration of division, during which a cell stops moving
@@ -97,11 +97,11 @@ maxdivisions = 3
 ## initial conditions ##
 ########################
 
-howmany_makeit_for_nextgen = 9
-popsize = 9
+howmany_makeit_for_nextgen = 100
+popsize = 100
 
-n_init_cells = 9
-size_init_cells = 100
+n_init_cells = 100
+size_init_cells = 25
 
 #Initial configuration of cells, see ca.cpp placecellsorderly()
 init_cell_config = 0
@@ -129,14 +129,14 @@ zero_persistence_past_theline = 0
 #mut_rate = 0.01
 mut_rate = 0.0
 evolsim = 0
-evolreg = 0
+evolreg = 1
 
 #genome mutation
 mu = 0.02
 mustd = 0.05
 
 #should cells be scattered at the end of the season?
-scatter_cells = false
+scatter_cells = true
 
 #death rates for different cell types
 motiledeath = 0.5
@@ -145,7 +145,7 @@ dividingdeath = 0.5
 #scaling of death rates at end of season: for gradientbased cell death
 mindeathprob = 0.05
 maxdeathprob = 1.0
-fitscale = 60
+fitscale = 80
 
 # PDE parameters (irrelevant for this simulation)
 n_chem = 0
