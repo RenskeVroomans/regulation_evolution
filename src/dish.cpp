@@ -1319,6 +1319,7 @@ void Dish::UpdateCellParameters(int Time)
       if(c->Area()< par.min_area_for_life){
         c->SetTargetArea(0);
         c->Apoptose(); //set alive to false
+        //cerr<<"going to remove cell "<<c->Sigma()<<endl;
         CPM->RemoveCell(&*c,par.min_area_for_life,c->meanx,c->meany);
       }
     }
@@ -1326,7 +1327,7 @@ void Dish::UpdateCellParameters(int Time)
 
 
   //divide all cells that are bound to divide
-  sigma_newcells=CPM->DivideCells(which_cells);
+  sigma_newcells=CPM->DivideCells2(which_cells);
 
   //make random choice which cell is the mother (keeps resource in case of asymmetric division) and which the daughter (mutates)
   int dc;

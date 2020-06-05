@@ -143,6 +143,12 @@ void Cell::CellBirth(Cell &mother_cell) {
   growth=mother_cell.growth;
   eatprob=mother_cell.eatprob;
 
+		lb1=mother_cell.lb1;
+		lb2=mother_cell.lb2;
+		aa1=mother_cell.aa1;
+		aa2=mother_cell.aa2;
+		bb1=mother_cell.bb1;
+		bb2=mother_cell.bb2;
 
   clearNeighbours(); //neighbours will be reassigned during the division function
 
@@ -225,6 +231,13 @@ void Cell::ConstructorBody(int settau,int setrecycledsigma) {
   chemvecy=0.;
 
   time_since_birth=0;
+
+		lb1=0.;
+		lb2=0.;
+		aa1=0.;
+		aa2=0.;
+		bb1=0.;
+		bb2=0.;
 
   persdur=0;
   perstime=0;

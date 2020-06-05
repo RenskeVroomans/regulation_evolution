@@ -1827,12 +1827,16 @@ void CellularPotts::MeasureCellSize(Cell &c) {
 
 }
 
-int CellularPotts::FancyloopX2(int loopdepth, int meanx, int meany, int thissig, int newsig, double aa2, double bb2, bool above){
+int CellularPotts::FancyloopX2(int loopdepth, int meanx, int meany, int thissig, int newsig,  bool above){
   
   int thispix=0;
   bool loop=true;
   int py, px;
   int sigmaneigh;
+  
+  double aa2=(*cell)[thissig].aa2;
+  double bb2=(*cell)[thissig].bb2;
+  //cerr<<"FancyloopX2: cell "<<thissig<<" aa2 "<<aa2<<"FancyloopX2: bb2 "<<bb2<<endl;
   py=meany-((int)above*2-1)*loopdepth;
   if(py<=0||py>=sizey-1){
     if( par.periodic_boundaries ){
@@ -1870,12 +1874,17 @@ int CellularPotts::FancyloopX2(int loopdepth, int meanx, int meany, int thissig,
   return thispix;
 }
 
-int CellularPotts::FancyloopY2(int loopdepth, int meanx, int meany, int thissig, int newsig, double aa2, double bb2, bool left){
+int CellularPotts::FancyloopY2(int loopdepth, int meanx, int meany, int thissig, int newsig, bool left){
   int thispix=0;
   bool loop=true;
   int py, px;
   int sigmaneigh;
 
+  double aa2=(*cell)[thissig].aa2;
+  double bb2=(*cell)[thissig].bb2;
+  
+  //cerr<<"FancyloopY2: cell "<<thissig<<" aa2 "<<aa2<<"FancyloopX2: bb2 "<<bb2<<endl;
+  
   px=meanx-((int)left*2-1)*loopdepth;
   if(px<=0||px>=sizex-1){
     if( par.periodic_boundaries ){
@@ -1911,6 +1920,110 @@ int CellularPotts::FancyloopY2(int loopdepth, int meanx, int meany, int thissig,
     }
 
     return thispix;
+}
+
+void CellularPotts::FindOneCellDirection(Cell *thiscell)
+{
+	double small_number = 0.0000001;
+  double large_enough_number = 1./small_number;
+
+  double D;
+  double sxx, syy, sxy;
+  double meanx=thiscell->meanx;
+  double meany=thiscell->meany;
+  
+  sxx=thiscell->getSXX();
+  syy=thiscell->getSYY();
+  sxy=thiscell->getSXY();
+  
+  
+  if(thiscell->Sigma() && thiscell->Area()>5 && thiscell->AliveP()){
+		//cerr<<"finding directions for cell "<<thiscell->Sigma()<<" meanx "<<meanx<<" meany "<<meany<<"area "<<thiscell->Area()<<" sxx "<<sxx<<" syy "<<syy<<" sxy "<<sxy<<endl;
+		// Now we have the elements of the matrix, we diagonalise by solving eigenvalue problem (call x the eigenvalues)
+		// x^2 - (sxx+syy)x + (sxx*syy-sxy*sxy) = 0
+		D=sqrt( (sxx+syy)*(sxx+syy)-4.*(sxx*syy-sxy*sxy) ); // this is the discriminant
+		thiscell->setLB1((sxx+syy+D)/2.);    // these are the two solutions, i.e. the two eigenvalues
+		thiscell->setLB2((sxx+syy-D)/2.);
+    // Now lb1 > lb2 because ... well, look at it, then lb1 is largest eigenvalue,
+    // so its eigenvector is the principal axis of the cell
+
+    //Now we get the eigenvectors:
+    // first eigenvector v1 is the solution of C - lb1*v1 =0
+    // C is covar. matrix, lb1 is eigenv 1 just calculated.
+    // v1 has an x and a y component, here ve express v1 as x/y = sxy/(lb1-sxx)
+
+    //this case is when there is no covariance, so the cartesian axis are already the best basis
+    if(sxy!=0.0){
+//       cerr<<"sxy!=0, lb1: "<<lb1<<", syy: "<<syy<<", sxx: "<<sxx<<", sxy: "<<sxy<<endl;
+      thiscell->setBB1(sxy/(thiscell->lb1-syy)); // APPARENTLY THIS IS FINE- This is y/x - shoudn't it be = syy/(sxy-lb1)?
+      // I think this is correct : celldir[i].bb1=syy/(lb1-sxy);
+      // and NOT WHAT IS THERE.. UNLESS I am wrong :P
+      if (fabs(thiscell->bb1)<small_number) {
+        if (thiscell->bb1>0.)
+          thiscell->setBB1(small_number);
+        else
+          thiscell->setBB1(-small_number);
+      }
+
+      thiscell->setAA1(meany-meanx*thiscell->bb1); //this is the intercept to the y axis of the line with slope first eigenv.
+      // which passes through xmean and ymean
+      thiscell->setBB2((-1.)/thiscell->bb1); // bb2 is the direction perpendicular to the first eigenvector
+      // (because the perpend. to a line y=mx+q has slope -1/m)
+
+      thiscell->setAA2(meany-thiscell->bb2*meanx); // this is the intercept to y axis of the line of the second eigenvector
+      // along this line we cut the cell !!!
+      //cerr<<"option 0"<<endl;
+    }else{
+//       cerr<<"sxy=0, ";
+      // USED TO BE
+      //celldir[i].bb1=1.; WHICH IS DEFINITELY WRONG
+
+      //Because later we are doing operations on the slope, we should choose a large enough number that does not overflow
+      // a good idea could be to choose a slope so that the almost vertical line makes less than epsilon=0.1 error across the whole field
+      // so that division is effectively vertical (or horizontal)
+      // this is a line that has slope par.sizex/epsilon, let's add a little bit to be extra safe (times 2)
+      // with a field size of 1000 and epsilon = 0.1 -> m= 10000 that's ok small for more calculations
+
+      //double large_enough_number = (2.*(double)par.sizex)/0.1;
+      //double large_enough_number = 1./0.0000001;
+      double random_plus_or_minus_1 = -1+2*(int)(2.*RANDOM());
+      if(sxx>syy){
+				//cerr<<"option 1"<<endl;
+        thiscell->setBB1(0.);
+        thiscell->setAA1(meany);
+        thiscell->setBB2(random_plus_or_minus_1*large_enough_number);
+        thiscell->setAA2(meany-thiscell->bb2*meanx);
+//         cerr<<"sxx>syy"<<endl;
+      }
+      else if(syy>sxx){
+				//cerr<<"option 2"<<endl;
+        thiscell->setBB1(random_plus_or_minus_1*large_enough_number);
+        thiscell->setAA1(meany-meanx*thiscell->bb1);
+        //celldir[i].bb2 = 0.;
+        thiscell->setBB2(-1.*random_plus_or_minus_1*small_number);
+        thiscell->setAA2(meany);
+//         cerr<<"syy>sxx"<<endl;
+      }
+      else{
+//         cerr<<"syy=sxx"<<endl;
+        thiscell->setBB1((RANDOM() <0.5)? 0. : (random_plus_or_minus_1*large_enough_number)); //if sxx==syy we randomise vertical or horizontal
+        if(thiscell->bb1 > 1. || thiscell->bb1 < 1.){
+					//cerr<<"option 3"<<endl;
+          thiscell->setAA1(meany-meanx*thiscell->bb1);
+          //celldir[i].bb2 = 0.;
+          thiscell->setBB2(-1.*random_plus_or_minus_1*small_number);
+          thiscell->setAA2(meany);
+        }else{
+					//cerr<<"option 4"<<endl;
+          thiscell->setAA1(meany);
+          thiscell->setBB2(random_plus_or_minus_1*large_enough_number);
+          thiscell->setAA2(meany-thiscell->bb2*meanx);
+        }
+      }
+    }
+//     cerr<<"Sigma: "<<i<<", bb2: "<<celldir[i].bb2<<", aa2: "<<celldir[i].aa2<<endl;
+  }
+	
 }
 
 // Rewritten version of the funciton below
@@ -2040,19 +2153,26 @@ Dir *CellularPotts::FindCellDirections3(void) const
     sxx=0.;
     syy=0.;
     sxy=0.;
+    
     // why this? of course moments are ill defined for small cells
     // maybe it's no problem because they don't divide
+
+    if(i && n[i]!=(*cell)[i].Area()) cerr<<"ni "<<n[i]<<" area "<<(*cell)[i].Area()<<endl;
 
     if(n[i]>10){
       sxx=sumxx[i]/((double)n[i]); //or maybe n[i]-1 ? Would be strange because this is all the data
       syy=sumyy[i]/((double)n[i]);
       sxy=sumxy[i]/((double)n[i]);
       
-      if(i && (*cell)[i].Area() && 
-					(sxx!=(double)(*cell)[i].getSXX()/(double)(*cell)[i].Area() || syy!=(double)(*cell)[i].getSYY()/(double)(*cell)[i].Area() || (sxy-(double)(*cell)[i].getSXY()/(double)(*cell)[i].Area()) ) ){
+      /*if(i && (*cell)[i].Area() && 
+					(  (sxx-(*cell)[i].getSXX())*(sxx-(*cell)[i].getSXX())>0.01 
+					|| (syy-(*cell)[i].getSYY())*(syy-(*cell)[i].getSYY())>0.01 
+					|| (sxy-(*cell)[i].getSXY())*(sxy-(*cell)[i].getSXY())>0.01 ) ){
 				cerr<<"Warning: different moments for cell "<<i<<": "<<sxx<<" "<<syy<<" "<<sxy<<endl;
 				(*cell)[i].PrintMoments();
-			}
+				(*cell)[i].PrintInertia();
+				
+			}*/
 
       // Now we have the elements of the matrix, we diagonalise by solving eigenvalue problem (call x the eigenvalues)
       // x^2 - (sxx+syy)x + (sxx*syy-sxy*sxy) = 0
@@ -2132,7 +2252,7 @@ Dir *CellularPotts::FindCellDirections3(void) const
         }
       }
     }
-//     cerr<<"Sigma: "<<i<<", bb2: "<<celldir[i].bb2<<", aa2: "<<celldir[i].aa2<<endl;
+    //cerr<<"Sigma: "<<i<<", bb2: "<<celldir[i].bb2<<", aa2: "<<celldir[i].aa2<<endl;
   }
 
   //}
@@ -2768,13 +2888,16 @@ vector<int> CellularPotts::DivideCells2(vector<bool> which_cells)
   if ( !(which_cells.size()==0 || which_cells.size() >= cell->size()) ) {
     throw "In CellularPotts::DivideCells, Too few elements in vector<int> which_cells.";
   }
+  
+  int countdivs=0;
 
 	for (int dc=0; dc<which_cells.size(); dc++){
 		if(which_cells[dc] && (*cell)[dc].AliveP()){
 			
-			//FindThisCellDirection(&((*cell)[dc]);
+			FindOneCellDirection(&((*cell)[dc]));
+			
 			Cell *motherp=&((*cell)[dc]); //mother points to the cell holding this pixel
-	    Cell *daughterp;
+			Cell *daughterp;
 	    
 	    vector<Cell>::iterator c;
       bool replaced=false;
@@ -2785,6 +2908,7 @@ vector<int> CellularPotts::DivideCells2(vector<bool> which_cells)
 					daughterp=new Cell(*(motherp->owner), motherp->getTau(), c->Sigma());
 					daughterp->CellBirth(*motherp);
 					*c = *daughterp;    // notice that the operator = (equal) is overloaded, see cell.h
+					motherp=&((*cell)[dc]);
 					replaced=true;
 					break;
 				}
@@ -2797,7 +2921,6 @@ vector<int> CellularPotts::DivideCells2(vector<bool> which_cells)
         // renew pointer to mother (because after push_back memory might be relocated)
         motherp=&((*cell)[dc]);
       }
-
 			// renew daughter pointers
       delete daughterp;
 
@@ -2806,21 +2929,21 @@ vector<int> CellularPotts::DivideCells2(vector<bool> which_cells)
       } else {
         daughterp=&(cell->back());
       }
-      
-      DivideThisCell(motherp, daughterp, celldir[dc].aa2, celldir[dc].bb2);
-      
+      divflags[ motherp->Sigma() ]=daughterp->Sigma();
+      DivideThisCell(motherp, daughterp);
+      countdivs++;
 		}
 		
 	}
 	
-	  if (celldir)
-    delete[] (celldir);
-
+	 // if (celldir)
+    //delete[] (celldir);
+//    if (countdivs) cerr<<"end div"<<endl;
   return divflags;
 
 }
 
-void CellularPotts::DivideThisCell(Cell* mother, Cell* daughter, double aa2, double bb2)
+void CellularPotts::DivideThisCell(Cell* mother, Cell* daughter)
 {
 	int momsig,momarea, dsig;
   int countpix=0; //to check if we removed all pixels
@@ -2829,36 +2952,40 @@ void CellularPotts::DivideThisCell(Cell* mother, Cell* daughter, double aa2, dou
   momsig=mother->Sigma();
   dsig=daughter->Sigma();
   momarea=mother->Area();
-  int meanx=(int)mother->getXpos();
-  int meany=(int)mother->getYpos();
+  int meanx=(int)mother->meanx;
+  int meany=(int)mother->meany;
   
   if(!momarea){
     cerr<<"DivideThisCell warning: attempting to divide cell without area"<<endl;
     return;
   }
-
-  if(sigma[meanx][meany]==momsig && meany>(int)(aa2 + bb2*(double)meanx) ){
-    ChangePixel(momsig, dsig, meanx, meany);
-    countpix++;
+  
+  if(sigma[meanx][meany]==momsig){
+		countpix++;
+		if (meany>(int)(mother->aa2 + mother->bb2*(double)meanx) ){
+			ChangePixel(momsig, dsig, meanx, meany);
+		}
   }
-	
+  
+  
 	while(true){
     //top row
     //Here we go through progressively larger squares (only its boundary)
     //first through the top row, then the bottom row, then left and right sides
     //which are smaller.
-    countpix+=FancyloopX2(loopdepth,meanx,meany, momsig, dsig, aa2, bb2, true);
+    countpix+=FancyloopX2(loopdepth,meanx,meany, momsig, dsig, true);
     if(countpix==momarea) break;
-    countpix+=FancyloopX2(loopdepth,meanx,meany, momsig, dsig, aa2, bb2,false);
+    countpix+=FancyloopX2(loopdepth,meanx,meany, momsig, dsig, false);
     if(countpix==momarea) break;
-    countpix+=FancyloopY2(loopdepth,meanx,meany, momsig, dsig, aa2, bb2,true);
+    countpix+=FancyloopY2(loopdepth,meanx,meany, momsig, dsig, true);
     if(countpix==momarea) break;
-    countpix+=FancyloopY2(loopdepth,meanx,meany,momsig, dsig, aa2, bb2,false);
+    countpix+=FancyloopY2(loopdepth,meanx,meany, momsig, dsig, false);
     if(countpix==momarea) break;
 
 
     loopdepth++;
-
+    //cerr<<"cell "<<mother->Sigma()<<", loop depth "<<loopdepth<<", countpix "<<countpix<<endl;
+    if (loopdepth>50) break;
   }
 	
 }
@@ -2872,16 +2999,15 @@ void CellularPotts::ChangePixel(int orisig, int newsig, int posx,int posy)
 		oricell=&((*cell)[orisig]);
 	if(newsig)
 		newcell=&((*cell)[newsig]);
-
-	
-	//do the change
-	sigma[posx][posy]=newsig;
 	
 	//size and shape administration
 	if (orisig){
 		oricell->DecrementArea();
 		oricell->RemoveSiteFromMoments(posx,posy);
 	}
+	//do the change
+	sigma[posx][posy]=newsig;
+	
 	if (newsig){
 		newcell->IncrementArea();
 		newcell->AddSiteToMoments(posx,posy);

@@ -129,6 +129,12 @@ public:
 
     neighbours=src.neighbours;
 
+    lb1=src.lb1;
+		lb2=src.lb2;
+		aa1=src.aa1;
+		aa2=src.aa2;
+		bb1=src.bb1;
+		bb2=src.bb2;
     if(par.n_chem){
       chem = new double[par.n_chem];
       for (int ch=0;ch<par.n_chem;ch++)
@@ -211,6 +217,12 @@ public:
     jkey = src.jkey;
     vJ = src.vJ;
 
+		lb1=src.lb1;
+		lb2=src.lb2;
+		aa1=src.aa1;
+		aa2=src.aa2;
+		bb1=src.bb1;
+		bb2=src.bb2;
     chem = new double[par.n_chem];
     for (int ch=0;ch<par.n_chem;ch++)
       chem[ch]=src.chem[ch];
@@ -522,21 +534,20 @@ public:
   
   inline void PrintMoments(void) {
 
-    cerr << "\t sxx = " << (double)sum_xx/(double)area << "\n";
-    cerr << "\t syy = " << (double)sum_yy/(double)area << "\n";
-    cerr << "\t sxy = " << (double)sum_xy/(double)area << "\n";
+    cerr << "\t sxx = " << (double)sum_xx/(double)area-meanx*meanx << "\n";
+    cerr << "\t syy = " << (double)sum_yy/(double)area-meany*meany << "\n";
+    cerr << "\t sxy = " << (double)sum_xy/(double)area-meanx*meany << "\n";
 
   }
   
-  //temporary, for debugging
-  inline int getSXX(void){
-		return sum_xx;
+  inline double getSXX(void){
+		return (double)sum_xx/(double)area-meanx*meanx;
 	}
-  inline int getSYY(void){
-		return sum_yy;
+  inline double getSYY(void){
+		return (double)sum_yy/(double)area-meany*meany;
 	}
-  inline int getSXY(void){
-		return sum_xy;
+  inline double getSXY(void){
+		return (double)sum_xy/(double)area-meanx*meany;
 	}
 
   
@@ -1107,6 +1118,26 @@ private:
     return maxtau;
   }
   
+  
+  inline void setLB1(double slb1){
+		lb1=slb1;
+	}
+	inline void setLB2(double slb2){
+		lb2=slb2;
+	}
+	inline void setBB1(double sbb1){
+		bb1=sbb1;
+	}
+	inline void setBB2(double sbb2){
+		bb2=sbb2;
+	}
+	inline void setAA1(double saa1){
+		aa1=saa1;
+	}
+	inline void setAA2(double saa2){
+		aa2=saa2;
+	}
+  
 
 protected:
   int colour;
@@ -1209,6 +1240,8 @@ protected:
   long int sum_yy;
   long int sum_xy;
 
+	//long and short axis parameters.
+	double lb1, lb2, aa1, aa2, bb1, bb2;
   int time_since_birth;
 
   const Dish *owner; // pointer to owner of cell
