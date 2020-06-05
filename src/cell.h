@@ -519,7 +519,27 @@ public:
     cerr << "ixy = " << ixy << "\n";
 
   }
+  
+  inline void PrintMoments(void) {
 
+    cerr << "\t sxx = " << (double)sum_xx/(double)area << "\n";
+    cerr << "\t syy = " << (double)sum_yy/(double)area << "\n";
+    cerr << "\t sxy = " << (double)sum_xy/(double)area << "\n";
+
+  }
+  
+  //temporary, for debugging
+  inline int getSXX(void){
+		return sum_xx;
+	}
+  inline int getSYY(void){
+		return sum_yy;
+	}
+  inline int getSXY(void){
+		return sum_xy;
+	}
+
+  
   // return the current length
   inline double Length(void) {
     return length;
@@ -1086,6 +1106,7 @@ private:
   static int MaxTau(void) {
     return maxtau;
   }
+  
 
 protected:
   int colour;

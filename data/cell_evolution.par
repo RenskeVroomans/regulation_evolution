@@ -97,10 +97,10 @@ maxdivisions = 7  #1, 3, 7, 15, 31, etc
 ## initial conditions ##
 ########################
 
-howmany_makeit_for_nextgen = 100
-popsize = 100
+howmany_makeit_for_nextgen = 2
+popsize = 2
 
-n_init_cells = 100
+n_init_cells = 2
 size_init_cells = 25
 
 #Initial configuration of cells, see ca.cpp placecellsorderly()

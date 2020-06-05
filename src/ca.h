@@ -228,6 +228,8 @@ public:
     //void DivideCells(std::vector<bool> which_cells);
     vector<int> DivideCells(std::vector<bool> which_cells);
     vector<int> DivideCells2(std::vector<bool> which_cells);
+    
+    void DivideThisCell(Cell* mother, Cell* daughter, double aa2, double bb2);
 
     /*! Implements the core CPM algorithm. Carries out one MCS.
       \return Total energy change during MCS.
@@ -325,8 +327,13 @@ public:
   void RemoveCell(Cell* cellid,int min_area, int meanx, int meany);
   int FancyloopX(int loopdepth, int meanx, int meany, int thissig, bool above);
   int FancyloopY(int loopdepth, int meanx, int meany, int thissig, bool left);
+  
+  //for dividing cells
+  int FancyloopX2(int loopdepth, int meanx, int meany, int thissig, int newsig, double aa2, double bb2, bool above);
+  int FancyloopY2(int loopdepth, int meanx, int meany, int thissig, int newsig, double aa2, double bb2, bool left);
+  void ChangePixel(int orisig, int newsig, int posx,int posy);
   /*! \brief Display the division planes returned by FindCellDirections.
-
+	
   \param g: Graphics window
   \param celldir: cell axes as returned by FindCellDirections.
   */
