@@ -1,11 +1,11 @@
 ### Max time (max # monte carlo steps) ###
 # takes about 1hour per 100000 timesteps
 #mcs = 200000000
-mcs = 600000 #100000000
+mcs = 1000000 #100000000
 
 #cells in blobs move at 0.0055 px/mcs
 # duration of season could then be larger than field size/ speed
-season_duration = 300000
+season_duration = 500000
 
 ### grid size ###
 sizex = 500
@@ -44,10 +44,10 @@ lambda2 = 0
 #migration parameters
 #make startmu = 0 #for no persistent movement
 #default startmu = 0.0 or 3.0
-startmu = 0 #3.0
+startmu = 3.0
 #default = 50
-persduration = 10 #50
-init_chemmu = 0 #1.0 #chemotaxis strength
+persduration = 50
+init_chemmu = 1.0 #chemotaxis strength
 
 ## Cell Parameters ##
 
@@ -89,7 +89,7 @@ key_lock_length = 24
 #genomefile = designnetccs.txt
 nr_regnodes = 3
 divtime = 20	# scaled nr of steps before a cell initiates division
-divdur =  200 #1000     # duration of division, during which a cell stops moving
+divdur =  1000     # duration of division, during which a cell stops moving
 scaling_cell_to_ca_time = 20  # scaling factor for: freq update food plane, predation, feeding and growth/divide
 maxdivisions = 3
 
@@ -128,7 +128,7 @@ zero_persistence_past_theline = 0
 #these days k+l=50 -> 50*0.01=0.5 (one mutation every two replications)
 #mut_rate = 0.01
 mut_rate = 0.0
-evolsim = 0
+evolsim = 1
 evolreg = 1
 
 #genome mutation
@@ -192,12 +192,12 @@ metabolic_conversion = 0.5
 ## output ##
 ############
 
-storage_stride = 500
+storage_stride = 1000
 graphics = false
 store = true
 divisioncolour = true
 datadir = data_film2
-save_text_file_period = 500
+save_text_file_period = 1000
 datafile = data_cellcount.txt
 save_backup_period = 100000
 backupdir = backup

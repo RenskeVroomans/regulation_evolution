@@ -1514,6 +1514,76 @@ void CellularPotts::CellOrderColour(Graphics *g)
 
 }
 
+void CellularPotts::ColourCCS(Graphics *g)
+{
+  int i, j,q;
+  array<int,2> cellout;
+  vector <int> storeccs((*cell).size(),0);
+
+  //first assess whether cells output CCS
+  for (auto &c: (*cell)){
+    c.GetGeneOutput(cellout);
+    storeccs[c.Sigma()]=cellout[1];
+  }
+
+  for ( i = 0; i < sizex; i++ )
+    for ( j = 0; j < sizey; j++ ) {
+      int colour;
+
+      if(i==0 || i== sizex-1 || j==0 || j == sizey){
+        colour=0;
+        g->Point( colour, 2*i, 2*j);
+        g->Point( colour, 2*i+1, 2*j);
+        g->Point( colour, 2*i, 2*j+1);
+        g->Point( colour, 2*i+1, 2*j+1);
+        continue;
+      }
+
+      if (sigma[i][j]<=0) {
+        colour=0;
+      }else{
+        if(!par.divisioncolour){
+          colour = storeccs[sigma[i][j]]+2;
+        }else{
+          colour = storeccs[sigma[i][j]]*7+2;
+        }
+
+      }
+
+
+      //colour point if this is a cell
+      if (sigma[i][j]>0){
+        g->Point( colour, 2*i, 2*j); //draws 2i,2j
+        //check if the other 3 pixels in the image should be coloured as boundary
+        //if this cell different from what is on i+1,j
+        //south
+        if ( sigma[i][j] != sigma[i+1][j] && i+1 < sizex-1){
+          g->Point( 1, 2*i+1, 2*j );
+        }
+        else{
+          g->Point( colour, 2*i+1, 2*j );
+        }
+        //east
+        if( sigma[i][j] != sigma[i][j+1] && j+1<sizey-1){
+          g->Point( 1, 2*i, 2*j+1 );
+        }
+        else {
+          g->Point( colour, 2*i, 2*j+1 );
+        }
+        //southeast
+        if (i+1<sizex-1 && j+1<sizey-1 && (sigma[i][j]!=sigma[i+1][j+1] || sigma[i+1][j]!=sigma[i][j+1]) ){
+          g->Point( 1, 2*i+1, 2*j+1 );
+        }
+        else {
+          g->Point( colour, 2*i+1, 2*j+1 );
+        }
+      }//if this is a cell
+
+    } //end of for loop
+
+
+}
+
 int **CellularPotts::SearchNandPlot(Graphics *g, bool get_neighbours)
 {
   int i, j,q;

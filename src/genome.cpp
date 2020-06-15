@@ -187,7 +187,7 @@ void Genome::WriteToFile(char *filename)
   ofs.close();
 }
 
-void Genome::UpdateGeneExpression(const array<double,2> &input, bool sync_cells)
+void Genome::UpdateGeneExpression(const array<double,3> &input, bool sync_cells)
 {
   int i,j;
   double newval;

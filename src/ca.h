@@ -230,6 +230,13 @@ public:
     //void DivideCells(std::vector<bool> which_cells);
     vector<int> DivideCells(std::vector<bool> which_cells);
     vector<int> DivideCells2(std::vector<bool> which_cells);
+    //for dividing cells
+		int FancyloopX2(int loopdepth, int meanx, int meany, int thissig, int newsig, bool above);
+		int FancyloopY2(int loopdepth, int meanx, int meany, int thissig, int newsig, bool left);
+		void ChangePixel(int orisig, int newsig, int posx,int posy);
+		void FindOneCellDirection(Cell *c);
+		void DivideThisCell(Cell* mother, Cell* daughter);
+    
 
     /*! Implements the core CPM algorithm. Carries out one MCS.
       \return Total energy change during MCS.
