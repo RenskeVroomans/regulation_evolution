@@ -1340,7 +1340,7 @@ void Dish::UpdateCellParameters(int Time)
   }
 
   //divide all cells that are bound to divide
-  sigma_newcells=CPM->DivideCells(which_cells);
+  sigma_newcells=CPM->DivideCells2(which_cells);
   MutateCells(sigma_newcells);
   UpdateVectorJ(sigma_newcells);
 

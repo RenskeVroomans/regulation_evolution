@@ -1028,7 +1028,7 @@ int CellularPotts::AmoebaeMove2(PDE *PDEfield)
                               //BTW, we raise this after we are sure that k != kp: we don't want medium inside the cell :P
 
   bool mediumflag, converted, inout1, inout2;
-
+	int D_H,H_diss;
   // cout<<"I'm in AmoebaeMove"<<endl;
   int loop,p;
   //int updated=0;
@@ -1088,7 +1088,7 @@ int CellularPotts::AmoebaeMove2(PDE *PDEfield)
       // Don't even think of copying the special border state into you!
       if ( k  != kp ) {
         // connectivity dissipation:
-        int H_diss=0;
+        H_diss=0;
 
         if (!ConnectivityPreservedP(x,y))
           H_diss=par.conn_diss;
@@ -1101,7 +1101,7 @@ int CellularPotts::AmoebaeMove2(PDE *PDEfield)
         }
         //IF we are not copying medium from outer space
         if(!mediumflag){
-          int D_H=DeltaH(x,y,xp,yp,PDEfield);
+          D_H=DeltaH(x,y,xp,yp,PDEfield);
 
           if( (p=CopyvProb(D_H,H_diss))>0 ){
             ConvertSpin( x,y,xp,yp );
@@ -1109,7 +1109,7 @@ int CellularPotts::AmoebaeMove2(PDE *PDEfield)
             SumDH+=D_H;
           }
         }else{
-          int D_H=DeltaHWithMedium(x,y,PDEfield);
+          D_H=DeltaHWithMedium(x,y,PDEfield);
 
           if ((p=CopyvProb(D_H,H_diss))>0) {
             ConvertSpinToMedium( x,y );
@@ -1514,76 +1514,6 @@ void CellularPotts::CellOrderColour(Graphics *g)
 
 }
 
-void CellularPotts::ColourCCS(Graphics *g)
-{
-  int i, j,q;
-  array<int,2> cellout;
-  vector <int> storeccs((*cell).size(),0);
-
-  //first assess whether cells output CCS
-  for (auto &c: (*cell)){
-    c.GetGeneOutput(cellout);
-    storeccs[c.Sigma()]=cellout[1];
-  }
-
-  for ( i = 0; i < sizex; i++ )
-    for ( j = 0; j < sizey; j++ ) {
-      int colour;
-
-      if(i==0 || i== sizex-1 || j==0 || j == sizey){
-        colour=0;
-        g->Point( colour, 2*i, 2*j);
-        g->Point( colour, 2*i+1, 2*j);
-        g->Point( colour, 2*i, 2*j+1);
-        g->Point( colour, 2*i+1, 2*j+1);
-        continue;
-      }
-
-      if (sigma[i][j]<=0) {
-        colour=0;
-      }else{
-        if(!par.divisioncolour){
-          colour = storeccs[sigma[i][j]]+2;
-        }else{
-          colour = storeccs[sigma[i][j]]*7+2;
-        }
-
-      }
-
-
-      //colour point if this is a cell
-      if (sigma[i][j]>0){
-        g->Point( colour, 2*i, 2*j); //draws 2i,2j
-        //check if the other 3 pixels in the image should be coloured as boundary
-        //if this cell different from what is on i+1,j
-        //south
-        if ( sigma[i][j] != sigma[i+1][j] && i+1 < sizex-1){
-          g->Point( 1, 2*i+1, 2*j );
-        }
-        else{
-          g->Point( colour, 2*i+1, 2*j );
-        }
-        //east
-        if( sigma[i][j] != sigma[i][j+1] && j+1<sizey-1){
-          g->Point( 1, 2*i, 2*j+1 );
-        }
-        else {
-          g->Point( colour, 2*i, 2*j+1 );
-        }
-        //southeast
-        if (i+1<sizex-1 && j+1<sizey-1 && (sigma[i][j]!=sigma[i+1][j+1] || sigma[i+1][j]!=sigma[i][j+1]) ){
-          g->Point( 1, 2*i+1, 2*j+1 );
-        }
-        else {
-          g->Point( colour, 2*i+1, 2*j+1 );
-        }
-      }//if this is a cell
-
-    } //end of for loop
-
-
-}
-
 int **CellularPotts::SearchNandPlot(Graphics *g, bool get_neighbours)
 {
   int i, j,q;
@@ -1897,6 +1827,205 @@ void CellularPotts::MeasureCellSize(Cell &c) {
 
 }
 
+int CellularPotts::FancyloopX2(int loopdepth, int meanx, int meany, int thissig, int newsig,  bool above){
+  
+  int thispix=0;
+  bool loop=true;
+  int py, px;
+  int sigmaneigh;
+  
+  double aa2=(*cell)[thissig].aa2;
+  double bb2=(*cell)[thissig].bb2;
+  //cerr<<"FancyloopX2: cell "<<thissig<<" aa2 "<<aa2<<"FancyloopX2: bb2 "<<bb2<<endl;
+  py=meany-((int)above*2-1)*loopdepth;
+  if(py<=0||py>=sizey-1){
+    if( par.periodic_boundaries ){
+      if(py<=0)
+        py=sizey-2+py;
+      else if (py>=sizey-1)
+        py=py-sizey+2;
+    }else{
+      loop=false;
+    }
+  }
+
+  if(loop)
+    for(int x=meanx-loopdepth; x<=meanx+loopdepth;x++){
+      px=x;
+      if(x<=0 || x>=sizex-1){
+        if( par.periodic_boundaries ){
+          if(x<=0)
+            px=sizex-2+x;
+          else if (x>=sizex-1)
+            px=x-sizex+2;
+        }else{
+          continue;
+        }
+      }
+
+      if (sigma[px][py]==thissig ){
+				thispix++;
+				if (py>(int)(aa2 + bb2*(double)px)){
+					ChangePixel(thissig, newsig, px, py );
+				}	
+			}
+    }
+
+  return thispix;
+}
+
+int CellularPotts::FancyloopY2(int loopdepth, int meanx, int meany, int thissig, int newsig, bool left){
+  int thispix=0;
+  bool loop=true;
+  int py, px;
+  int sigmaneigh;
+
+  double aa2=(*cell)[thissig].aa2;
+  double bb2=(*cell)[thissig].bb2;
+  
+  //cerr<<"FancyloopY2: cell "<<thissig<<" aa2 "<<aa2<<"FancyloopX2: bb2 "<<bb2<<endl;
+  
+  px=meanx-((int)left*2-1)*loopdepth;
+  if(px<=0||px>=sizex-1){
+    if( par.periodic_boundaries ){
+      if(px<=0)
+        px=sizex-2+px;
+      else if (px>=sizex-1)
+        px=px-sizex+2;
+    }else{
+      loop=false;
+    }
+  }
+
+  if(loop)
+    for(int y=meany-loopdepth+1; y<=meany+loopdepth-1;y++){
+      py=y;
+      if(y<=0 || y>=sizey-1){
+        if( par.periodic_boundaries ){
+          if(y<=0)
+            py=sizey-2+y;
+          else if (y>=sizey-1)
+            py=y-sizey+2;
+        }else{
+          continue;
+        }
+      }
+
+      if (sigma[px][py]==thissig ){
+				thispix++;
+				if (py>(int)(aa2 + bb2*(double)px)){
+					ChangePixel(thissig, newsig, px, py );
+				}	
+			}
+    }
+
+    return thispix;
+}
+
+void CellularPotts::FindOneCellDirection(Cell *thiscell)
+{
+	double small_number = 0.0000001;
+  double large_enough_number = 1./small_number;
+
+  double D;
+  double sxx, syy, sxy;
+  double meanx=thiscell->meanx;
+  double meany=thiscell->meany;
+  
+  sxx=thiscell->getSXX();
+  syy=thiscell->getSYY();
+  sxy=thiscell->getSXY();
+  
+  
+  if(thiscell->Sigma() && thiscell->Area()>5 && thiscell->AliveP()){
+		//cerr<<"finding directions for cell "<<thiscell->Sigma()<<" meanx "<<meanx<<" meany "<<meany<<"area "<<thiscell->Area()<<" sxx "<<sxx<<" syy "<<syy<<" sxy "<<sxy<<endl;
+		// Now we have the elements of the matrix, we diagonalise by solving eigenvalue problem (call x the eigenvalues)
+		// x^2 - (sxx+syy)x + (sxx*syy-sxy*sxy) = 0
+		D=sqrt( (sxx+syy)*(sxx+syy)-4.*(sxx*syy-sxy*sxy) ); // this is the discriminant
+		thiscell->setLB1((sxx+syy+D)/2.);    // these are the two solutions, i.e. the two eigenvalues
+		thiscell->setLB2((sxx+syy-D)/2.);
+    // Now lb1 > lb2 because ... well, look at it, then lb1 is largest eigenvalue,
+    // so its eigenvector is the principal axis of the cell
+
+    //Now we get the eigenvectors:
+    // first eigenvector v1 is the solution of C - lb1*v1 =0
+    // C is covar. matrix, lb1 is eigenv 1 just calculated.
+    // v1 has an x and a y component, here ve express v1 as x/y = sxy/(lb1-sxx)
+
+    //this case is when there is no covariance, so the cartesian axis are already the best basis
+    if(sxy!=0.0){
+//       cerr<<"sxy!=0, lb1: "<<lb1<<", syy: "<<syy<<", sxx: "<<sxx<<", sxy: "<<sxy<<endl;
+      thiscell->setBB1(sxy/(thiscell->lb1-syy)); // APPARENTLY THIS IS FINE- This is y/x - shoudn't it be = syy/(sxy-lb1)?
+      // I think this is correct : celldir[i].bb1=syy/(lb1-sxy);
+      // and NOT WHAT IS THERE.. UNLESS I am wrong :P
+      if (fabs(thiscell->bb1)<small_number) {
+        if (thiscell->bb1>0.)
+          thiscell->setBB1(small_number);
+        else
+          thiscell->setBB1(-small_number);
+      }
+
+      thiscell->setAA1(meany-meanx*thiscell->bb1); //this is the intercept to the y axis of the line with slope first eigenv.
+      // which passes through xmean and ymean
+      thiscell->setBB2((-1.)/thiscell->bb1); // bb2 is the direction perpendicular to the first eigenvector
+      // (because the perpend. to a line y=mx+q has slope -1/m)
+
+      thiscell->setAA2(meany-thiscell->bb2*meanx); // this is the intercept to y axis of the line of the second eigenvector
+      // along this line we cut the cell !!!
+      //cerr<<"option 0"<<endl;
+    }else{
+//       cerr<<"sxy=0, ";
+      // USED TO BE
+      //celldir[i].bb1=1.; WHICH IS DEFINITELY WRONG
+
+      //Because later we are doing operations on the slope, we should choose a large enough number that does not overflow
+      // a good idea could be to choose a slope so that the almost vertical line makes less than epsilon=0.1 error across the whole field
+      // so that division is effectively vertical (or horizontal)
+      // this is a line that has slope par.sizex/epsilon, let's add a little bit to be extra safe (times 2)
+      // with a field size of 1000 and epsilon = 0.1 -> m= 10000 that's ok small for more calculations
+
+      //double large_enough_number = (2.*(double)par.sizex)/0.1;
+      //double large_enough_number = 1./0.0000001;
+      double random_plus_or_minus_1 = -1+2*(int)(2.*RANDOM());
+      if(sxx>syy){
+				//cerr<<"option 1"<<endl;
+        thiscell->setBB1(0.);
+        thiscell->setAA1(meany);
+        thiscell->setBB2(random_plus_or_minus_1*large_enough_number);
+        thiscell->setAA2(meany-thiscell->bb2*meanx);
+//         cerr<<"sxx>syy"<<endl;
+      }
+      else if(syy>sxx){
+				//cerr<<"option 2"<<endl;
+        thiscell->setBB1(random_plus_or_minus_1*large_enough_number);
+        thiscell->setAA1(meany-meanx*thiscell->bb1);
+        //celldir[i].bb2 = 0.;
+        thiscell->setBB2(-1.*random_plus_or_minus_1*small_number);
+        thiscell->setAA2(meany);
+//         cerr<<"syy>sxx"<<endl;
+      }
+      else{
+//         cerr<<"syy=sxx"<<endl;
+        thiscell->setBB1((RANDOM() <0.5)? 0. : (random_plus_or_minus_1*large_enough_number)); //if sxx==syy we randomise vertical or horizontal
+        if(thiscell->bb1 > 1. || thiscell->bb1 < 1.){
+					//cerr<<"option 3"<<endl;
+          thiscell->setAA1(meany-meanx*thiscell->bb1);
+          //celldir[i].bb2 = 0.;
+          thiscell->setBB2(-1.*random_plus_or_minus_1*small_number);
+          thiscell->setAA2(meany);
+        }else{
+					//cerr<<"option 4"<<endl;
+          thiscell->setAA1(meany);
+          thiscell->setBB2(random_plus_or_minus_1*large_enough_number);
+          thiscell->setAA2(meany-thiscell->bb2*meanx);
+        }
+      }
+    }
+//     cerr<<"Sigma: "<<i<<", bb2: "<<celldir[i].bb2<<", aa2: "<<celldir[i].aa2<<endl;
+  }
+	
+}
+
 // Rewritten version of the funciton below
 // it uses the cell meanx and meany for the center of mass of the cell,
 // IN THE FUTURE -> only calculates PCA for cells that need to be split...
@@ -2024,13 +2153,26 @@ Dir *CellularPotts::FindCellDirections3(void) const
     sxx=0.;
     syy=0.;
     sxy=0.;
+    
     // why this? of course moments are ill defined for small cells
     // maybe it's no problem because they don't divide
+
+    if(i && n[i]!=(*cell)[i].Area()) cerr<<"ni "<<n[i]<<" area "<<(*cell)[i].Area()<<endl;
 
     if(n[i]>10){
       sxx=sumxx[i]/((double)n[i]); //or maybe n[i]-1 ? Would be strange because this is all the data
       syy=sumyy[i]/((double)n[i]);
       sxy=sumxy[i]/((double)n[i]);
+      
+      /*if(i && (*cell)[i].Area() && 
+					(  (sxx-(*cell)[i].getSXX())*(sxx-(*cell)[i].getSXX())>0.01 
+					|| (syy-(*cell)[i].getSYY())*(syy-(*cell)[i].getSYY())>0.01 
+					|| (sxy-(*cell)[i].getSXY())*(sxy-(*cell)[i].getSXY())>0.01 ) ){
+				cerr<<"Warning: different moments for cell "<<i<<": "<<sxx<<" "<<syy<<" "<<sxy<<endl;
+				(*cell)[i].PrintMoments();
+				(*cell)[i].PrintInertia();
+				
+			}*/
 
       // Now we have the elements of the matrix, we diagonalise by solving eigenvalue problem (call x the eigenvalues)
       // x^2 - (sxx+syy)x + (sxx*syy-sxy*sxy) = 0
@@ -2110,7 +2252,7 @@ Dir *CellularPotts::FindCellDirections3(void) const
         }
       }
     }
-//     cerr<<"Sigma: "<<i<<", bb2: "<<celldir[i].bb2<<", aa2: "<<celldir[i].aa2<<endl;
+    //cerr<<"Sigma: "<<i<<", bb2: "<<celldir[i].bb2<<", aa2: "<<celldir[i].aa2<<endl;
   }
 
   //}
@@ -2526,194 +2668,6 @@ void CellularPotts::ShowDirections(Graphics &g, const Dir *celldir) const
 
 }
 
-//a make-over for the function DivideCells
-// DON'T USE IT, at best it's the same as the other, at worst it might be incomplete
-// commented out to make sure you don't accidentally use it!
-// vector<int> CellularPotts::DivideCells2(vector<bool> which_cells)
-// {
-//   //cerr<<"Hello begin DivideCells"<<endl;
-//   int sigmaneigh;
-//   // for the cell directions
-//   Dir *celldir=0;
-//
-//   // Allocate space for divisionflags
-//   vector<int> divflags( cell->size()*2 + 5 ); // automatically initialised to zero
-//
-//   //curious: here it also complains when which_cells contains as many cells as the whole cell vector
-//   //but further down, it will just divide all cells if which_cells is empty...
-//   // the comment above really is not true
-//   if ( !(which_cells.size()==0 || which_cells.size() >= cell->size()) ) {
-//     cerr<<"which_cells.size()="<<which_cells.size()<<endl;
-//     throw "In CellularPotts::DivideCells, Too few elements in vector<int> which_cells.";
-//   }
-//   // division
-//   {
-//     celldir=FindCellDirections3(); //find cell directions here
-//     //celldir=FindCellDirections2();  // notice that this is called once, the first time any cell is divided
-//     //celldir=FindCellDirections(); BUGGY in two ways: doesn't handle division plane across boundaries at all, it misplaces the normal one as well.
-//
-//     for (int i=1;i<sizex-1;i++) for (int j=1;j<sizey-1;j++)
-//       if (sigma[i][j]>0) // i.e. not medium and not border state (-1)
-//       {
-//         // Pointer to mother. Warning: Renew pointer after a new
-//         // cell is added (push_back). Then, the array *cell is relocated and
-//         // the pointer will be lost...
-//         Cell *motherp=&((*cell)[sigma[i][j]]); //mother points to the cell holding this pixel
-//         Cell *daughterp;
-//
-//         // Divide if NOT medium and if DIV bit set or divide_always is set
-//         // if which_cells is given, di+nx>0 && i+nx[k]<sizex-1 divide only if the cell
-//         // is marked in which_cells.
-//         if( !which_cells.size() || which_cells[motherp->sigma] ){
-//           //divflags is a vector that works like this: divflags[ mother_sigma ] = daughter_sigma
-//           //if first time we get this mother then divflags at pos mother_sigma is 0
-//           if( !(divflags[ motherp->Sigma() ]) ){
-//             // add daughter cell, copying states of mother
-//
-//             //we first check if we can recycle some position already exisiting in the vector
-//             //such position would come from a cell that has previously apoptosed
-//             vector<Cell>::iterator c;
-//             bool replaced=false;
-//             for ( c=cell->begin(), c++ ; c!=cell->end(); c++){
-//               if(c->AliveP() == false && c->TargetArea() <= 0 && c->Area() == 0 ){
-//                 //we recycle this sigma for the new cell
-//                 daughterp=new Cell(*(motherp->owner), motherp->getTau(), c->Sigma()); //set recycled sigma
-//                 daughterp->CellBirth(*motherp);
-//                 *c = *daughterp;    // notice that the operator = (equal) is overloaded, see cell.h
-//                 replaced=true;
-//                 break;
-//               }
-//             }
-//             if( !replaced ){
-//               daughterp=new Cell(*(motherp->owner));  //this calls  Cell(...){ owner=&who; ConstructorBody()}
-//               // this is what prints Tomato2
-//               daughterp->CellBirth(*motherp);
-//               cell->push_back(*daughterp);  //this calls default copy constructor Cell(const Cell &src)
-//               // prints "Tomato"
-//               //this puts new cells at the end of array if there was no space to recycle
-//               // renew pointer to mother (because after push_back memory might be relocated)
-//               motherp=&((*cell)[sigma[i][j]]);
-//             }
-//
-//             divflags[ motherp->Sigma() ]=daughterp->Sigma(); //daughtersigma is set to newest sigma in ConstructorBody of Cell
-//             delete daughterp;
-//             // array may be relocated after "push_back"
-//             // renew daughter pointers
-//             if(replaced) daughterp=&(*c);
-//             else daughterp=&(cell->back());
-//             //daughterp=&(cell->back());
-//           }else{
-//             daughterp=&( (*cell)[ divflags[motherp->Sigma()] ] );
-//           }
-//
-//           // if site is below the minor axis of the cell: sigma of new cell
-//           // to properly choose this we have to check where this pixel is
-//           int checki=i;
-//           int checkj=j;
-//           if(par.periodic_boundaries){
-//             //Check if this pixel is closer to mean pos when wrapped, we wrap it
-//             double meanx=celldir[motherp->sigma].meanx;
-//             double meany=celldir[motherp->sigma].meany;
-//
-//             if( (checki-meanx)>0 && (checki-meanx)>(meanx-(checki-(par.sizex-2))) ) {
-//               checki-=(par.sizex-2);
-//               //cerr<<"celldiv passb1"<<endl;
-//             }
-//             else if( (meanx-checki)>0 && (meanx-checki)>(checki+(par.sizex-2)-meanx) ){
-//               checki+=(par.sizex-2);
-//               //cerr<<"celldiv passb2"<<endl;
-//             }
-//             if(  checkj-meany>0  &&  checkj-meany >(meany-(checkj-(par.sizey-2))) ){
-//               checkj-=(par.sizey-2);
-//               //cerr<<"celldiv passb3"<<endl;
-//             }
-//             else if( meany-checkj>0   &&  meany-checkj >(checkj+(par.sizey-2)-meany) ){
-//               checkj+=(par.sizey-2);
-//               //cerr<<"celldiv passb4"<<endl;
-//             }
-//           }
-//           if( checkj>( (int)( celldir[motherp->sigma].aa2 + celldir[motherp->sigma].bb2*(double)checki) ) ){
-//             motherp->DecrementArea();
-//             motherp->DecrementTargetArea();
-//             motherp->RemoveSiteFromMoments(i,j);
-//
-//             sigma[i][j]=daughterp->Sigma();  // WHERE is daughterp->Sigma() defined?
-//             daughterp->IncrementArea();
-//             daughterp->IncrementTargetArea();
-//             daughterp->AddSiteToMoments(i,j);
-//
-//             //go through neighbourhood to update contacts
-//             // to new daughter contacts we now pass duration from mother
-//             // sigma[i][j] is daughter, sigmaneigh can be daughter, mother, medium, someone else
-//             for (int k=1; k<=n_nb; k++){
-//               //if wrapped boundaries we wrap i+nx[k] and j+ny[k] around (if needed)
-//               //if fiexed boundaries, we exclude them from the neigh counting
-//               int neix=i+nx[k];
-//               int neiy=j+ny[k];
-//               if(neix<=0 || neix>=sizex-1 || neiy<=0 || neiy>=sizey-1){
-//                 if( par.periodic_boundaries ){
-//                   if(neix<=0) neix=sizex-2+neix;
-//                   if(neix>=sizex-1) neix=neix-sizex+2;
-//                   if(neiy<=0) neiy=sizey-2+neiy;
-//                   if(neiy>=sizey-1) neiy=neiy-sizey+2;
-//                 }else{
-//                   continue;
-//                 }
-//               }
-//
-//
-//               sigmaneigh = sigma[ neix ][ neiy ];
-//               //if sigmaneigh is not sigma, we update the contact of daughter cell with it,
-//               //and the contact of that cell with daughter (provided it is not medium)
-//               if( sigmaneigh  != sigma[i][j] ){
-//                 //cout<<sigmaneigh<<" "<<sigma[i][j]<<" +1"<<endl;
-//                 //cerr<<"Hello 0.1"<<endl;
-//                 (*cell)[sigma[i][j]].updateNeighbourBoundary(sigmaneigh,1);
-//                 //take duration from mother iff sigmaneigh is not mother
-//                 if(sigmaneigh!=motherp->Sigma() && sigmaneigh!=MEDIUM)
-//                   (*cell)[sigma[i][j]].SetNeighbourDurationFromMother(sigmaneigh, motherp->returnDuration(sigmaneigh) );
-//
-//                 //cerr<<"Hello 0.2"<<endl;
-//                 //also cell to which sigmaneigh belongs must be updated, if it is not medium
-//                 if(sigmaneigh){
-//                   //cerr<<"Hello 0.21, pos i,j: "<< i<<","<<j<<endl;
-//                   //cerr<<"Sigmaneigh (method) is: " << (*cell)[sigmaneigh].Sigma()<< " and should be (from CA) "<< sigmaneigh;
-//                   //cerr<< " from pos neix,neiy "<< neix<<","<<neiy<< endl;
-//                   //cerr<< "Also before calculations nei x and y: "<<i+nx[k]<<","<<j+ny[k]<<endl;
-//                   (*cell)[sigmaneigh].updateNeighbourBoundary(sigma[i][j],1);
-//                   //cerr<<"Hello 0.22"<<endl;
-//                   if( sigmaneigh!=motherp->Sigma() ){
-//                     //cerr<<"Hello 0.23"<<endl;
-//                     (*cell)[sigmaneigh].SetNeighbourDurationFromMother( sigma[i][j], motherp->returnDuration(sigmaneigh) );
-//                   }
-//                 }
-//                 //cerr<<"Hello 0.3"<<endl;
-//                 if (sigmaneigh!=motherp->Sigma()){
-//                   //cout<<sigmaneigh<<" "<<motherp->Sigma()<<" -1"<<endl;
-//                   motherp->updateNeighbourBoundary(sigmaneigh,-1);
-//                   //cerr<<"Hello 0.4"<<endl;
-//                   if(sigmaneigh)
-//                     (*cell)[sigmaneigh].updateNeighbourBoundary(motherp->Sigma(),-1);
-//                   //cerr<<"Hello 0.5"<<endl;
-//                 }
-//               }else//sigmaneigh==sigma[i][j] This pixel has already become a daughter pixel,
-//                 //remove from contacts between mother and daughter
-//               {
-//                 motherp->updateNeighbourBoundary(sigmaneigh,-1);
-//                 (*cell)[sigmaneigh].updateNeighbourBoundary(motherp->Sigma(),-1);
-//               }
-//             }
-//           }
-//         }
-//       }
-//   }
-//   if (celldir)
-//     delete[] (celldir);
-//
-//   return divflags;
-// }
-
-
 vector<int> CellularPotts::DivideCells(vector<bool> which_cells)
 {
 
@@ -2840,6 +2794,7 @@ vector<int> CellularPotts::DivideCells(vector<bool> which_cells)
             }
           }
 
+          //mother always ends up at smaller ypos than daughter
           if( checkj>( (int)( celldir[motherp->sigma].aa2 + celldir[motherp->sigma].bb2*(double)checki) ) ){
             motherp->DecrementArea();
             motherp->RemoveSiteFromMoments(i,j);
@@ -2913,6 +2868,211 @@ vector<int> CellularPotts::DivideCells(vector<bool> which_cells)
   return divflags;
 
 }
+
+vector<int> CellularPotts::DivideCells2(vector<bool> which_cells)
+{
+
+  int sigmaneigh;
+
+  // Originally for the cell directions, but this goes through the entire field
+  //Dir *celldir=0;
+  //if (!celldir) celldir=FindCellDirections3();
+
+  // Allocate space for divisionflags
+  vector<int> divflags( cell->size()*2 + 5 ); // automatically initialised to zero
+  vector<int> toprint;
+
+  //curious: here it also complains when which_cells contains as many cells as the whole cell vector
+  //but further down, it will just divide all cells if which_cells is empty...
+  // the comment above really is not true
+  if ( !(which_cells.size()==0 || which_cells.size() >= cell->size()) ) {
+    throw "In CellularPotts::DivideCells, Too few elements in vector<int> which_cells.";
+  }
+  
+  int countdivs=0;
+
+	for (int dc=0; dc<which_cells.size(); dc++){
+		if(which_cells[dc] && (*cell)[dc].AliveP()){
+			
+			FindOneCellDirection(&((*cell)[dc]));
+			
+			Cell *motherp=&((*cell)[dc]); //mother points to the cell holding this pixel
+			Cell *daughterp;
+	    
+	    vector<Cell>::iterator c;
+      bool replaced=false;
+      for ( c=cell->begin(), c++ ; c!=cell->end(); c++){
+				if(c->AliveP() == false && c->TargetArea() <= 0 && c->Area() == 0 ){
+					//we recycle this sigma for the new cell
+					//set recycled sigma
+					daughterp=new Cell(*(motherp->owner), motherp->getTau(), c->Sigma());
+					daughterp->CellBirth(*motherp);
+					*c = *daughterp;    // notice that the operator = (equal) is overloaded, see cell.h
+					motherp=&((*cell)[dc]);
+					replaced=true;
+					break;
+				}
+      }
+      if( !replaced ){
+        //MAKES NEW CELL AT THE END OF ARRAY
+        daughterp=new Cell(*(motherp->owner));  //this calls  Cell(...){ owner=&who; ConstructorBody()}
+        daughterp->CellBirth(*motherp);
+        cell->push_back(*daughterp);  //this calls default copy constructor and puts new cells at the end of array if there was no space to recycle
+        // renew pointer to mother (because after push_back memory might be relocated)
+        motherp=&((*cell)[dc]);
+      }
+			// renew daughter pointers
+      delete daughterp;
+
+      if(replaced){
+        daughterp=&(*c);
+      } else {
+        daughterp=&(cell->back());
+      }
+      divflags[ motherp->Sigma() ]=daughterp->Sigma();
+      DivideThisCell(motherp, daughterp);
+      countdivs++;
+		}
+		
+	}
+	
+	 // if (celldir)
+    //delete[] (celldir);
+//    if (countdivs) cerr<<"end div"<<endl;
+  return divflags;
+
+}
+
+void CellularPotts::DivideThisCell(Cell* mother, Cell* daughter)
+{
+	int momsig,momarea, dsig;
+  int countpix=0; //to check if we removed all pixels
+  bool loop=true;
+  int loopdepth=1;
+  momsig=mother->Sigma();
+  dsig=daughter->Sigma();
+  momarea=mother->Area();
+  int meanx=(int)mother->meanx;
+  int meany=(int)mother->meany;
+  
+  if(!momarea){
+    cerr<<"DivideThisCell warning: attempting to divide cell without area"<<endl;
+    return;
+  }
+  
+  if(sigma[meanx][meany]==momsig){
+		countpix++;
+		if (meany>(int)(mother->aa2 + mother->bb2*(double)meanx) ){
+			ChangePixel(momsig, dsig, meanx, meany);
+		}
+  }
+  
+  
+	while(true){
+    //top row
+    //Here we go through progressively larger squares (only its boundary)
+    //first through the top row, then the bottom row, then left and right sides
+    //which are smaller.
+    countpix+=FancyloopX2(loopdepth,meanx,meany, momsig, dsig, true);
+    if(countpix==momarea) break;
+    countpix+=FancyloopX2(loopdepth,meanx,meany, momsig, dsig, false);
+    if(countpix==momarea) break;
+    countpix+=FancyloopY2(loopdepth,meanx,meany, momsig, dsig, true);
+    if(countpix==momarea) break;
+    countpix+=FancyloopY2(loopdepth,meanx,meany, momsig, dsig, false);
+    if(countpix==momarea) break;
+
+
+    loopdepth++;
+    //cerr<<"cell "<<mother->Sigma()<<", loop depth "<<loopdepth<<", countpix "<<countpix<<endl;
+    if (loopdepth>50) break;
+  }
+	
+}
+
+void CellularPotts::ChangePixel(int orisig, int newsig, int posx,int posy)
+{
+
+	int sigmaneigh;
+	Cell *oricell, *newcell;
+	if (orisig)
+		oricell=&((*cell)[orisig]);
+	if(newsig)
+		newcell=&((*cell)[newsig]);
+	
+	//size and shape administration
+	if (orisig){
+		oricell->DecrementArea();
+		oricell->RemoveSiteFromMoments(posx,posy);
+	}
+	//do the change
+	sigma[posx][posy]=newsig;
+	
+	if (newsig){
+		newcell->IncrementArea();
+		newcell->AddSiteToMoments(posx,posy);
+	}
+  
+  //do the administration of neighbours and edges
+  //go through neighbourhood to update contacts
+  // to new daughter contacts we now pass duration from mother
+  //sigma[posx][posy] is daughter, sigmaneigh can be daughter, mother, medium, someone else
+  for (int k=1; k<=n_nb; k++){
+    //if wrapped boundaries we wrap i+nx[k] and j+ny[k] around (if needed)
+    //if fixed boundaries, we exclude them from the neigh counting
+    int neix=posx+nx[k];
+    int neiy=posy+ny[k];
+    if(neix<=0 || neix>=sizex-1 || neiy<=0 || neiy>=sizey-1){
+      if( par.periodic_boundaries ){
+        if(neix<=0) neix=sizex-2+neix;
+        if(neix>=sizex-1) neix=neix-sizex+2;
+        if(neiy<=0) neiy=sizey-2+neiy;
+        if(neiy>=sizey-1) neiy=neiy-sizey+2;
+      }else{
+        continue;
+      }
+    }
+    
+    sigmaneigh = sigma[neix][neiy];
+    //if sigmaneigh is not sigma, we update the contact of daughter cell with it,
+    //and the contact of that cell with daughter (provided it is not medium)
+    if( sigmaneigh  != newsig ){
+      //update the edgeSetVector
+      edgeSetVector.insert({posx,posy,neix,neiy});
+      edgeSetVector.insert({neix,neiy,posx,posy});
+
+      if(newsig){
+				(*cell)[newsig].updateNeighbourBoundary(sigmaneigh,1);
+				//take duration from mother iff sigmaneigh is not mother
+				if(sigmaneigh!=orisig && sigmaneigh!=MEDIUM && orisig)
+					(*cell)[newsig].SetNeighbourDurationFromMother(sigmaneigh, oricell->returnDuration(sigmaneigh) );
+			} 
+      //also cell to which sigmaneigh belongs must be updated, if it is not medium
+      if(sigmaneigh){
+        (*cell)[sigmaneigh].updateNeighbourBoundary(newsig,1);
+        if( sigmaneigh!=orisig && orisig){
+          (*cell)[sigmaneigh].SetNeighbourDurationFromMother(newsig, oricell->returnDuration(sigmaneigh) );
+        }
+      }
+
+      if (sigmaneigh!=orisig){
+				if (orisig) oricell->updateNeighbourBoundary(sigmaneigh,-1);
+        if(sigmaneigh) (*cell)[sigmaneigh].updateNeighbourBoundary(orisig,-1);
+      }
+			
+    }else//sigmaneigh==sigma[i][j] This pixel has already become a daughter pixel,
+    {
+      //update the edgeSetVector
+      edgeSetVector.erase({posx,posy,neix,neiy});
+      edgeSetVector.erase({neix,neiy,posx,posy});
+
+      if (orisig) oricell->updateNeighbourBoundary(sigmaneigh,-1);
+      if (sigmaneigh) (*cell)[sigmaneigh].updateNeighbourBoundary(orisig,-1);
+    }
+  } // end neighbour loop
+	
+}
+
 
 bool CellularPotts::PlaceOneCellsAtXY(int posx,int posy, int cellsize, int cellsigma)
 {
@@ -3484,10 +3644,11 @@ void CellularPotts::RemoveCell(Cell* thiscell,int min_area, int meanx, int meany
 
 //   cerr<<"meanx: "<<meanx<<" meany: "<<meany<<endl;
 
-  if (!thiscell->Area()){
-    cerr<<"Warning: CPM->RemoveCell(): trying to remove a cell with no area."<<endl;
+  if(!thisarea){
+    cerr<<"RemoveCell warning: attempting to remove cell without area"<<endl;
     return;
   }
+
   if(sigma[meanx][meany]==thissig){
     sigma[meanx][meany]=0;
     countpix++;
