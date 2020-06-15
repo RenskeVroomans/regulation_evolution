@@ -33,11 +33,13 @@ void Genome::InitGenome(int in, int reg, int out)
   //}
 
   for (i=0; i<reg; i++){
-    regnodes.push_back(*(new Gene(1, i+innr, innr, regnr)));
+    //regnodes.push_back(*(new Gene(1, i+innr, innr, regnr)));
+    regnodes.emplace_back(1, i+innr, innr, regnr);
   }
 
   for (i=0; i<out; i++){
-    outputnodes.push_back(*(new Gene(2, i+innr+regnr, innr, regnr)));
+    //outputnodes.push_back(*(new Gene(2, i+innr+regnr, innr, regnr)));
+    outputnodes.emplace_back(2, i+innr+regnr, innr, regnr);
   }
 }
 
@@ -185,7 +187,7 @@ void Genome::WriteToFile(char *filename)
   ofs.close();
 }
 
-void Genome::UpdateGeneExpression(const array<double,3> &input, bool sync_cells)
+void Genome::UpdateGeneExpression(const array<double,2> &input, bool sync_cells)
 {
   int i,j;
   double newval;
@@ -195,7 +197,7 @@ void Genome::UpdateGeneExpression(const array<double,3> &input, bool sync_cells)
   for (i=0; i<input.size(); i++){
     v_input.push_back(inputscale[i]*(double)input[i]);
   }
-
+  //cerr <<"updating..."<<endl;
   //update the regulatory genes
   for (i=0; i<regnodes.size(); i++){
     newval=0.;
