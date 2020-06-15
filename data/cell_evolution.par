@@ -1,11 +1,11 @@
 ### Max time (max # monte carlo steps) ###
 # takes about 1hour per 100000 timesteps
 #mcs = 200000000
-mcs = 30000  #100000000
+mcs = 3000000  #100000000
 
 #cells in blobs move at 0.0055 px/mcs
 # duration of season could then be larger than field size/ speed
-season_duration = 150000
+season_duration = 500000
 
 ### grid size ###
 sizex = 500
@@ -86,10 +86,10 @@ key_lock_length = 24
 ## of Cell Behaviour ##
 #######################
 
-genomefile = designnetasym.txt
+#genomefile = designnetasym.txt
 nr_regnodes = 3
 divtime = 20	# scaled nr of steps before a cell initiates division
-divdur =  200  #1000     # duration of division, during which a cell stops moving
+divdur =  1000     # duration of division, during which a cell stops moving
 scaling_cell_to_ca_time = 20  # scaling factor for: freq update food plane, predation, feeding and growth/divide
 maxdivisions = 7  #1, 3, 7, 15, 31, etc
 
@@ -97,10 +97,10 @@ maxdivisions = 7  #1, 3, 7, 15, 31, etc
 ## initial conditions ##
 ########################
 
-howmany_makeit_for_nextgen = 2
-popsize = 2
+howmany_makeit_for_nextgen = 100
+popsize = 100
 
-n_init_cells = 2
+n_init_cells = 100
 size_init_cells = 25
 
 #Initial configuration of cells, see ca.cpp placecellsorderly()
@@ -128,8 +128,8 @@ zero_persistence_past_theline = 0
 #these days k+l=50 -> 50*0.01=0.5 (one mutation every two replications)
 #mut_rate = 0.01
 mut_rate = 0.0
-evolsim = 0
-evolreg = 0
+evolsim = 1
+evolreg = 1
 
 #genome mutation
 mu = 0.02
@@ -145,7 +145,7 @@ dividingdeath = 0.5
 #scaling of death rates at end of season: for gradientbased cell death
 mindeathprob = 0.1
 maxdeathprob = 0.95
-fitscale = 90
+fitscale = 80
 
 # PDE parameters (irrelevant for this simulation)
 n_chem = 0
@@ -192,12 +192,12 @@ metabolic_conversion = 0.5
 ## output ##
 ############
 
-storage_stride = 500
+storage_stride = 5000
 graphics = false
 store = true
 divisioncolour = true
 datadir = data_film2
-save_text_file_period = 500
+save_text_file_period = 5000
 datafile = data_cellcount.txt
 save_backup_period = 100000
 backupdir = backup

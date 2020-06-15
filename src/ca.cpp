@@ -1028,7 +1028,7 @@ int CellularPotts::AmoebaeMove2(PDE *PDEfield)
                               //BTW, we raise this after we are sure that k != kp: we don't want medium inside the cell :P
 
   bool mediumflag, converted, inout1, inout2;
-
+	int D_H,H_diss;
   // cout<<"I'm in AmoebaeMove"<<endl;
   int loop,p;
   //int updated=0;
@@ -1088,7 +1088,7 @@ int CellularPotts::AmoebaeMove2(PDE *PDEfield)
       // Don't even think of copying the special border state into you!
       if ( k  != kp ) {
         // connectivity dissipation:
-        int H_diss=0;
+        H_diss=0;
 
         if (!ConnectivityPreservedP(x,y))
           H_diss=par.conn_diss;
@@ -1101,7 +1101,7 @@ int CellularPotts::AmoebaeMove2(PDE *PDEfield)
         }
         //IF we are not copying medium from outer space
         if(!mediumflag){
-          int D_H=DeltaH(x,y,xp,yp,PDEfield);
+          D_H=DeltaH(x,y,xp,yp,PDEfield);
 
           if( (p=CopyvProb(D_H,H_diss))>0 ){
             ConvertSpin( x,y,xp,yp );
@@ -1109,7 +1109,7 @@ int CellularPotts::AmoebaeMove2(PDE *PDEfield)
             SumDH+=D_H;
           }
         }else{
-          int D_H=DeltaHWithMedium(x,y,PDEfield);
+          D_H=DeltaHWithMedium(x,y,PDEfield);
 
           if ((p=CopyvProb(D_H,H_diss))>0) {
             ConvertSpinToMedium( x,y );
@@ -2875,8 +2875,8 @@ vector<int> CellularPotts::DivideCells2(vector<bool> which_cells)
   int sigmaneigh;
 
   // Originally for the cell directions, but this goes through the entire field
-  Dir *celldir=0;
-  if (!celldir) celldir=FindCellDirections3();
+  //Dir *celldir=0;
+  //if (!celldir) celldir=FindCellDirections3();
 
   // Allocate space for divisionflags
   vector<int> divflags( cell->size()*2 + 5 ); // automatically initialised to zero
