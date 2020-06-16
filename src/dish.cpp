@@ -1261,6 +1261,7 @@ void Dish::UpdateCellParameters(int Time)
   //update networks asynchronously f
   for( c=cell.begin(), ++c; c!=cell.end(); ++c){
     if( c->AliveP() ){
+			if(c->TimesDivided()>8) cerr<<"Warning: cell "<<c->Sigma()<<" divided "<<c->TimesDivided()<<" times"<<endl;
       c->time_since_birth++;
       interval=Time+c->Gextiming();
       //update the network withing each cell, if it is the right time
