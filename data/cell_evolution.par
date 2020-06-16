@@ -89,7 +89,7 @@ key_lock_length = 24
 #genomefile = designnetccs.txt
 nr_regnodes = 3
 divtime = 20	# scaled nr of steps before a cell initiates division
-divdur =  1000     # duration of division, during which a cell stops moving
+divdur =  10     # duration of division, during which a cell stops moving
 scaling_cell_to_ca_time = 20  # scaling factor for: freq update food plane, predation, feeding and growth/divide
 maxdivisions = 3
 
@@ -192,12 +192,12 @@ metabolic_conversion = 0.5
 ## output ##
 ############
 
-storage_stride = 1000
+storage_stride = 5000
 graphics = false
 store = true
 divisioncolour = true
 datadir = data_film2
-save_text_file_period = 1000
+save_text_file_period = 5000
 datafile = data_cellcount.txt
 save_backup_period = 100000
 backupdir = backup
