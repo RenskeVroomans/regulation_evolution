@@ -3758,10 +3758,10 @@ void CellularPotts::RemoveCell(Cell* thiscell,int min_area, int meanx, int meany
       (*cell)[signeigh].setNeighbour(thissig,0,0);
       (*cell)[signeigh].updateNeighbourBoundary(0,blength);
     }
-    thiscell->setNeighbour(signeigh,0,0);
+   
   }
 
-
+   thiscell->clearNeighbours();
 //   cerr<<
 //   exit(1);
 
