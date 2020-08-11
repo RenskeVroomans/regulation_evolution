@@ -174,7 +174,7 @@ TIMESTEP {
     static int sum=0, nr=0;
 
 
-    if( !(i%100) ) cerr<<"TIME: "<<i<<endl;
+    if( !(i%100000) ) cerr<<"TIME: "<<i<<endl;
 
     //auto start = high_resolution_clock::now();
     dish->CellsEat2();
