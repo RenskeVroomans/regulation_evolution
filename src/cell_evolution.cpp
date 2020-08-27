@@ -278,12 +278,12 @@ TIMESTEP {
         dish->Plot(this,0); // this is g //everything contained here
         EndScene();
         Write(fname);
-        //sprintf(fname,"%s/ccs%09d.png",par.datadir,i);
-        // BeginScene(); //this is an empty function for X11
-        //ClearImage();
-        //dish->Plot(this,1); // this is g //everything contained here
-        //EndScene();
-        //Write(fname);
+        sprintf(fname,"%s/ccs%09d.png",par.datadir,i);
+        BeginScene(); //this is an empty function for X11
+        ClearImage();
+        dish->Plot(this,1); // this is g //everything contained here
+        EndScene();
+        Write(fname);
       }
     }
     // TO FILE FOR TEXT
