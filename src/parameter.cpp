@@ -103,6 +103,7 @@ Parameter::Parameter() {
   ardecay=0.;
   gradnoise=0.1;
   gradscale=1.0;
+  ccs_off=false;
   min_contact_duration_for_preying = 10;
   frac_contlen_eaten = 1.;
   metabolic_conversion = 0.5;
@@ -189,6 +190,7 @@ void Parameter::PrintWelcomeStatement(void)
   cerr<<" -backupfile path/to/backupfile # to start simulation from backup"<<endl;
   cerr<<" -season [INT_NUMBER] # season duration"<<endl;
   cerr<<" -foodinflux [FLOAT_NUMBER] # howmuchfood"<<endl;
+  cerr<<" -ccs_off [BOOL] # whether CCS is active"<<endl;
   cerr<<" -gradscale [FLOAT_NUMBER] slope of the gradient (in percent units)"<<endl;
   cerr<<" -gradnoise [FLOAT_NUMBER] chances that any grid point has gradient, rather than being empty"<<endl;
   cerr<<" -chemmu [FLOAT_NUMBER] scaling factor for chemotaxis in the Hamiltonian"<<endl;
@@ -365,6 +367,9 @@ int Parameter::ReadArguments(int argc, char *argv[])
     }else if( 0==strcmp(argv[i],"-nofood") ){
       is_there_food = false;
       cerr<<"No food in this simulation"<<endl;
+    }else if( 0==strcmp(argv[i],"-ccs_off") ){
+      ccs_off = true;
+      cerr<<"No CCS in this simulation"<<endl;
     }else if( 0==strcmp(argv[i],"-noevolsim") ){
       evolsim = false;
       cerr<<"No evolution in this simulation (sim ends when [howmany_makeit_for_nextgen] cells pass [the_line])"<<endl;
@@ -588,6 +593,7 @@ void Parameter::Read(const char *filename) {
   the_line = igetpar(fp, "the_line", 1, true);
   is_there_food = bgetpar(fp,"is_there_food",false, true);
   evolreg = bgetpar(fp,"evolreg",false, true);
+  ccs_off = bgetpar(fp,"ccs_off",false, true);
   zero_persistence_past_theline = bgetpar(fp,"zero_persistence_past_theline",false, true);
   season_experiment= bgetpar(fp,"season_experiment",false, true);
   season_duration= igetpar(fp, "season_duration", 1, true);
@@ -825,6 +831,7 @@ void Parameter::Write(ostream &os) const {
   os << " the_line = " << the_line <<endl;
   os << " is_there_food = " << is_there_food << endl;
   os << " evolreg = " << evolreg <<endl;
+  os << " ccs_off = " << ccs_off <<endl;
   os<< " zero_persistence_past_theline = " << zero_persistence_past_theline << endl;
   os<< " season_experiment = " << season_experiment << endl;
   os<< " season_duration = " << season_duration << endl;

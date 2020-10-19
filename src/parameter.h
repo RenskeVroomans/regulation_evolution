@@ -107,6 +107,7 @@ class Parameter {
   double mut_rate;
   double startmu;
   double init_chemmu;
+  bool ccs_off; //whether CCS should be active (handy to figure out if it does anything!)
   int persduration;
   int scaling_cell_to_ca_time;
   int howmany_makeit_for_nextgen;
@@ -123,7 +124,6 @@ class Parameter {
   bool evolreg; //do regulation parameters evolve?
   bool is_there_food; // is there food?
   bool zero_persistence_past_theline; // set persdur to zero after line is crossed
-
   bool season_experiment;
   int season_duration;
   int init_cell_config;

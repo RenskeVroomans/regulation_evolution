@@ -1361,7 +1361,7 @@ double Dish::NeighInputCalc(Cell &c, int outgene)
     }
     totalmem+=nei.second.first;
   }
-  if(totalmem){
+  if(totalmem && !par.ccs_off){
     //cerr<<"input for cell "<<c.Sigma()<<" of type "<<c.getTau()<<": "<<totalsig/(double)totalmem<<endl;
     return totalsig/(double)totalmem;
   }else{
