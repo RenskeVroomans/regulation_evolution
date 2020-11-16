@@ -516,9 +516,15 @@ void Dish::PrintCellParticles(void)
 // to make them pretty
 void Dish::FoodPlot(Graphics *g)
 {
-  // cpm->sigma[x][y] returns sigma, which I can use to indicise the vector of cells... can I? yes_
-  double maxfood = 1.+ par.gradscale*((double)par.sizey/100.);
-  double food_to_index_convfact = 28./maxfood;
+  
+  //old scaling
+  double maxfood = 1.+ par.gradscale*((double)hypot(par.sizex,par.sizey)/100.);
+  double food_to_index_convfact =40./maxfood;
+  //values have to range from 16 to 66; so from 0 to 50.
+  //int min_signal=5;
+  //double maxfood = min_signal + 1+ (par.gradscale/100.)*(hypot(par.sizex,par.sizey)) ;
+  //maxfood ~ min_signal+ 0.01*hypot(1000,1000) = 1 + 10*sqrt(2) ~ 20
+  //double food_to_index_convfact = 50./(maxfood);
 
   // suspend=true suspends calling of DrawScene
   for(int x=1;x<par.sizex-1;x++)
@@ -575,42 +581,45 @@ void Dish::Plot(Graphics *g, int colour) {
     // return;
     //get info where the peak is and draw a line for box where who_made_it should register stuff
     // notice that the box is now radial
-    int peakx = Food->GetPeakx();
-    int peaky = Food->GetPeaky();
-    //std::cerr << "peak is at "<<peakx<<" "<<peaky << '\n';
-    int minx,maxx,miny,maxy;
+    //note: this doesn't work when there are multiple peaks
+    if(strcmp(par.food_influx_location,"multigradient") != 0){
+      int peakx = Food->GetPeakx();
+      int peaky = Food->GetPeaky();
+      //std::cerr << "peak is at "<<peakx<<" "<<peaky << '\n';
+      int minx,maxx,miny,maxy;
 
-    if(peakx==1) {
-      //then peaky = sizey/2 and
-      minx = 1;
-      maxx = par.the_line;
-      miny = par.sizey/2 - par.the_line; //circle
-      maxy = par.sizey/2 + par.the_line;
-      // miny = 1;
-      // maxy = par.sizey-1;
-      // g->Line(2*par.the_line, 1 , 2*maxx , 2*par.sizey-1 , 1);
-    }else if(peakx==par.sizex-1){
-      minx = par.sizex-par.the_line;
-      maxx = par.sizex-1;
-      miny = par.sizey/2 - par.the_line; //circle
-      maxy = par.sizey/2 + par.the_line;
-      // g->Line(2*minx,1,2*minx, 2*par.sizey-1, 1);
-    }else if(peaky==1){
-      minx = par.sizex/2 - par.the_line; //circle
-      maxx = par.sizex/2 + par.the_line;
-      miny = 1;
-      maxy = par.the_line;
-      // g->Line(1,2*par.the_line,2*par.sizex-1, 2*par.the_line, 1);
-    }else if(peaky==par.sizey-1){
-      minx = par.sizex/2 - par.the_line; //circle
-      maxx = par.sizex/2 + par.the_line;
-      miny = par.sizey-par.the_line;
-      maxy = par.sizey-1;
-      // g->Line(1, 2*(par.sizey-par.the_line) , 2*par.sizex-1  , 2*(par.sizey-par.the_line), 1);
-    }else{
-      cerr<<"Plot(): Error. Got weird peakx and peaky position: peakx, peaky = "<<peakx<<", "<<peaky<<endl;
-      std::cerr << "Don't know what to do with this, program exits now." << '\n';
-      exit(1);
+      if(peakx==1) {
+        //then peaky = sizey/2 and
+        minx = 1;
+        maxx = par.the_line;
+        miny = par.sizey/2 - par.the_line; //circle
+        maxy = par.sizey/2 + par.the_line;
+        // miny = 1;
+        // maxy = par.sizey-1;
+        // g->Line(2*par.the_line, 1 , 2*maxx , 2*par.sizey-1 , 1);
+      }else if(peakx==par.sizex-1){
+        minx = par.sizex-par.the_line;
+        maxx = par.sizex-1;
+        miny = par.sizey/2 - par.the_line; //circle
+        maxy = par.sizey/2 + par.the_line;
+        // g->Line(2*minx,1,2*minx, 2*par.sizey-1, 1);
+      }else if(peaky==1){
+        minx = par.sizex/2 - par.the_line; //circle
+        maxx = par.sizex/2 + par.the_line;
+        miny = 1;
+        maxy = par.the_line;
+        // g->Line(1,2*par.the_line,2*par.sizex-1, 2*par.the_line, 1);
+      }else if(peaky==par.sizey-1){
+        minx = par.sizex/2 - par.the_line; //circle
+        maxx = par.sizex/2 + par.the_line;
+        miny = par.sizey-par.the_line;
+        maxy = par.sizey-1;
+        // g->Line(1, 2*(par.sizey-par.the_line) , 2*par.sizex-1  , 2*(par.sizey-par.the_line), 1);
+      }else{
+        cerr<<"Plot(): Error. Got weird peakx and peaky position: peakx, peaky = "<<peakx<<", "<<peaky<<endl;
+        std::cerr << "Don't know what to do with this, program exits now." << '\n';
+        exit(1);
+      }
     }
     //std::cerr << "minx,maxx " << minx <<" "<< maxx<< '\n';
     //std::cerr << "miny,maxy " << miny <<" "<< maxy<< '\n';
@@ -1794,7 +1803,7 @@ void Dish::GradientBasedCellKill(int popsize)
 {
   int current_popsize=0;
   std::vector< pair<int,double> > sig_dist;
-  double distance, rn;
+  double distance, mindist, rn;
   double deathprob;
   //double fitness, totalfit, thisfit;
   //totalfit=0.;
@@ -1805,7 +1814,14 @@ void Dish::GradientBasedCellKill(int popsize)
   for(auto &c: cell){
     if(c.Sigma()>0 && c.AliveP()){
       current_popsize++;
-      distance=sqrt((Food->GetPeakx()-c.getXpos())*(Food->GetPeakx()-c.getXpos())+(Food->GetPeaky()-c.getYpos())*(Food->GetPeaky()-c.getYpos()));
+      mindist=par.sizex+par.sizey; //set a bigass size that is definitely further than they can be
+      for(size_t k = 0; k<Food->vpeakx.size(); k++ ){//check to which peak you are closest
+        distance=hypot( (Food->vpeakx[k]-c.getXpos()) , (Food->vpeaky[k]-c.getYpos()) );
+        if(distance<mindist) mindist=distance;
+      } 
+      distance=mindist; //so that I don't have to replace old code
+      //distance=sqrt((Food->GetPeakx()-c.getXpos())*(Food->GetPeakx()-c.getXpos())+(Food->GetPeaky()-c.getYpos())*(Food->GetPeaky()-c.getYpos()));//single-peak version
+      
       //fitness=1./(1.+pow(distance,3.)/par.fitscale); //for relative version
       //totalfit+=fitness; //for relative version
       //sig_dist.push_back(make_pair(c.Sigma(),totalfit)); //for relative version

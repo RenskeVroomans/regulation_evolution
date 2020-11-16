@@ -313,6 +313,11 @@ void IntPlane::InitIncreaseVal(CellularPotts *cpm) {
     IncreaseVal = std::bind(&IntPlane::IncreaseValBoundaryGrad, this, cpm);
     //     exit(1);
     ;
+  }else if(strcmp(par.food_influx_location,"multigradient") == 0){
+    cerr<<"Hello, got food influx location: "<<par.food_influx_location<<endl;
+    IncreaseVal = std::bind(&IntPlane::IncreaseValMultiGradient, this, cpm);
+    //     exit(1);
+    ;
   }
   else{
     cerr<<"INIT: Error. Got unidentified food influx location: "<<par.food_influx_location<<endl;
@@ -661,6 +666,110 @@ void IntPlane::IncreaseValBoundaryGrad(CellularPotts *cpm)
 
 
 }
+
+// I am going to change the direction of the gradient every so often
+void IntPlane::IncreaseValMultiGradient(CellularPotts *cpm)
+{
+  // THIS IS FOR ONE GRADIENT ONCE
+  // static int first_time=1;
+  // if(!first_time) return;
+  // first_time=0;
+  int min_n_gradients = par.minpeaks;  //min number of gradient peaks
+  int max_n_gradients = par.maxpeaks; //max number of gradient peaks
+  int min_dist_between_peaks = 250; // minimum distance between peaks
+  int min_signal=5;
+  double max_dist = hypot(sizex,sizey); //this is the maximum possible distance between two points
+  
+  if(!par.evolsim){
+    std::cerr << "IncreaseValMultiGradient() not ready for this" << '\n';
+    exit(1);
+    
+    // THIS SHOULD BE MAYBE A FIXED SET OF A FEW GRADIENT PEAKS
+    
+    peakx=sizex/2;
+    peaky=1;
+  }
+  else{
+    size_t n_grads = min_n_gradients+( (size_t)( (1+max_n_gradients-min_n_gradients)*RANDOM() )); //so that there is always at least one
+    std::cerr << "Gonna make so many gradients: "<< n_grads << '\n';
+    vpeakx.clear();
+    vpeaky.clear();
+    int this_peakx= 1+ (int)( (sizex-1)*RANDOM() );
+    int this_peaky= 1+ (int)( (sizey-1)*RANDOM() );
+    vpeakx.push_back(this_peakx); 
+    vpeaky.push_back(this_peaky); 
+    // now all the following ones have to be at some distance from each other
+    // Check if next peak is too close to previous ones
+    size_t j=0;
+    //we are trying to place each gradient 10 times - on average
+    while(j<n_grads*10 && vpeakx.size() < n_grads){
+      // std::cerr << "Entering the loop because j= "<< j<< " and vpeakx.size()= "<< vpeakx.size() << " which is smaller than "<< n_grads<< '\n';
+      // if(vpeakx.size() < n_grads)
+      //   std::cerr << "Re-check it is true that vpeakx.size() < n_grads" << '\n';
+      // else 
+      //   std::cerr << "what the fuck" << '\n';
+      this_peakx= 1+ (int)( (sizex-1)*RANDOM() ); //generate random coordinates
+      this_peaky= 1+ (int)( (sizey-1)*RANDOM() );
+      //check that it is sufficiently far from ALL other peaks
+      bool check_gradient=true;
+      for(size_t k = 0; k<vpeakx.size(); k++ ){
+        if(hypot( (vpeakx[k]-this_peakx) , (vpeaky[k]-this_peaky) ) < min_dist_between_peaks ){
+          check_gradient=false; //if new peak is not far enough we reject it
+          break; //there is no point in going on with checking distance -> so we break
+        }
+      }
+      //as we are here, we have either succeded or failed the check
+      // if success -> append coordinates
+      if(check_gradient){
+        vpeakx.push_back(this_peakx);
+        vpeaky.push_back(this_peaky);
+      }
+      j++; 
+      //if we no success -> better luck next iteration.
+    }
+    
+    std::cerr << "Here are the gradient peaks" << '\n';
+    for(size_t k = 0; k<vpeakx.size(); k++ ){
+      std::cerr << vpeakx[k] <<  " " << vpeaky[k] << endl;
+    }
+    
+    for(int i=1;i<sizex-1;i++)for(int j=1;j<sizey-1;j++){
+      double min_dist_from_peak = 10000000;
+      // Different definitions of distance from peak will give you different gradients
+      for(size_t k = 0; k<vpeakx.size(); k++ ){
+        // find minimum distance from gradient
+        double dist_from_peak=hypot(vpeakx[k] - i, vpeaky[k] -j );
+        if( dist_from_peak < min_dist_from_peak) 
+          min_dist_from_peak = dist_from_peak;
+      }
+      // double dfood = 1.+ par.gradscale*((double)sizey/100.) * (1. - min_dist_from_peak/(double)sizey); //this the usable line
+      // std::cerr << "min_dist_from_peak = "<<  min_dist_from_peak << '\n';
+      //double dfood =1.+ (par.gradscale/100.)*(max_dist - min_dist_from_peak); //sandro's version
+      double dfood = 1.+ par.gradscale*((double)max_dist/100.) * (1. - min_dist_from_peak/(double)max_dist); //this the usable line
+
+      // std::cerr << "dfood = "<< dfood << '\n';
+      int maxfood = (int)dfood;
+      if(RANDOM() < dfood - maxfood) maxfood++; //finer gradient made with a little unbiased noise
+      sigma[i][j]=maxfood;
+      
+      if(RANDOM() < par.gradnoise)
+        sigma[i][j]+=min_signal; //else already set to zero
+      
+      
+    }
+    
+  }
+  // end of else after if par.evolsim
+  //bool is_there_food = false;
+  if(par.is_there_food){
+    std::cerr << "IncreaseValMultiGradient(): Error. No food implemented in this simulation, you have still to build a second plane" << '\n';
+    exit(1);
+    //if(RANDOM()<par.foodinflux) sigma[i][j]=-1; //food
+  }
+  return;
+  
+}
+
 // I am going to change the direction of the gradient every so often
 void IntPlane::IncreaseValSpecifiedExp(CellularPotts *cpm)
 {

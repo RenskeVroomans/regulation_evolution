@@ -104,6 +104,8 @@ Parameter::Parameter() {
   ardecay=0.;
   gradnoise=0.1;
   gradscale=1.0;
+  minpeaks=1;
+  maxpeaks=2;
   min_contact_duration_for_preying = 10;
   frac_contlen_eaten = 1.;
   metabolic_conversion = 0.5;
@@ -585,6 +587,8 @@ void Parameter::Read(const char *filename) {
   growth = fgetpar(fp, "growth", 0., true);
   gradnoise = fgetpar(fp, "gradnoise", 0.1, true); //did I put these in?
   gradscale = fgetpar(fp, "gradscale", 1.0, true);
+  minpeaks = igetpar(fp, "minpeaks", 1, true); //did I put these in?
+  maxpeaks = igetpar(fp, "maxpeaks", 2, true);
   min_contact_duration_for_preying = fgetpar(fp, "min_contact_duration_for_preying", 1., true);
   frac_contlen_eaten = fgetpar(fp, "frac_contlen_eaten", 1., true);
   metabolic_conversion = fgetpar(fp, "metabolic_conversion", 0.5, true);
@@ -821,6 +825,8 @@ void Parameter::Write(ostream &os) const {
   os << " growth = " << growth << endl;
   os << " gradnoise = " << gradnoise << endl;
   os << " gradscale = " << gradscale << endl;
+  os << " minpeaks = " << minpeaks << endl;
+  os << " maxpeaks = " << maxpeaks << endl;
   os << " motiledeath = " << motiledeath << endl;
   os << " dividingdeath = " << dividingdeath << endl;
   os << " min_contact_duration_for_preying = " << min_contact_duration_for_preying;

@@ -141,6 +141,7 @@ class IntPlane {
   void IncreaseValPatchyRandomPersistence(CellularPotts *cpm);
   void IncreaseValSelfGrowth(CellularPotts *cpm);
   void IncreaseValBoundaryGrad(CellularPotts *cpm);
+  void IncreaseValMultiGradient(CellularPotts *cpm);
   void IncreaseValSpecifiedExp(CellularPotts *cpm);
   void InitIncreaseVal(CellularPotts *cpm);// set if everywhere parameter
                                            //Set function pointer for food update,
@@ -235,6 +236,9 @@ class IntPlane {
     peaky=py;
   }
 
+  std::vector<int> vpeakx; //location of peaks of gradients
+  std::vector<int> vpeaky; // ... multiple ones
+  
  protected:
 
   int **sigma;
@@ -243,7 +247,7 @@ class IntPlane {
   int sizey;
   int peakx,peaky; // location of peak of gradient,
                    // for gradient experiments
-
+  
   // Protected member functions
 
   /*! \brief Used in Plot. Takes a color and turns it into a grey value.
