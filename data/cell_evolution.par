@@ -5,7 +5,7 @@ mcs = 500000 #100000000
 
 #cells in blobs move at 0.0055 px/mcs
 # duration of season could then be larger than field size/ speed
-season_duration = 500000
+season_duration = 5000
 
 ### grid size ###
 sizex = 1000
@@ -99,9 +99,9 @@ maxdivisions = 3
 ########################
 
 howmany_makeit_for_nextgen = 50
-popsize = 50
+popsize = 1000
 
-n_init_cells = 50
+n_init_cells = 1000
 size_init_cells = 25
 
 #Initial configuration of cells, see ca.cpp placecellsorderly()
@@ -159,7 +159,10 @@ n_chem = 0
 # notice that nowhere zeroes foodinflux
 food_influx_location = multigradient
 gradnoise = 0.0
-gradscale = 10.0
+gradscale = 5.0
+
+minpeak=1
+maxpeak=4
 
 # only used in specified_experiment, if true it puts 1 food randomly, with probability foodinflux = 0.05
 is_there_food = 0
