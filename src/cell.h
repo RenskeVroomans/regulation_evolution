@@ -115,6 +115,7 @@ public:
     chemmu=src.chemmu;
     chemvecx=src.chemvecx;
     chemvecy=src.chemvecy;
+    grad_conc=src.grad_conc;
 
     lb1=src.lb1;
     lb2=src.lb2;
@@ -191,6 +192,7 @@ public:
     chemmu=src.chemmu;
     chemvecx=src.chemvecx;
     chemvecy=src.chemvecy;
+    grad_conc=src.grad_conc;
 
     sum_x=src.sum_x;
     sum_y=src.sum_y;
